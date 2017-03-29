@@ -60,6 +60,11 @@ startup
     vars.wramTarget_gambatte = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
     vars.romTarget = new SigScanTarget(0, "BB B9 33 3E 5A 45 4C 44 41");
 
+    timer.OnStart += (s, e) =>
+    {
+        vars.splits = vars.GetSplitList(vars.cgbFlag);
+    };
+
     vars.FindWRAM = (Func<Process, IntPtr>)((proc) => 
     {
         print("[Autosplitter] Scanning memory for WRAM");
@@ -110,61 +115,7 @@ startup
             return IntPtr.Zero;
     });
 
-    vars.baseSplits = new List<Tuple<string, List<Tuple<string, int>>>>
-    {
-        Tuple.Create("d1Enter", new List<Tuple<string, int>> { Tuple.Create("d1EntranceRoom", 0x8E) }),
-        Tuple.Create("d2Enter", new List<Tuple<string, int>> { Tuple.Create("d2EntranceRoom", 0x8C) }),
-        Tuple.Create("d3Enter", new List<Tuple<string, int>> { Tuple.Create("d3EntranceRoom", 0x8D) }),
-        Tuple.Create("d4Enter", new List<Tuple<string, int>> { Tuple.Create("d4EntranceRoom", 0x8C) }),
-        Tuple.Create("d5Enter", new List<Tuple<string, int>> { Tuple.Create("d5EntranceRoom", 0x8A) }),
-        Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("d6EntranceRoom", 0x8B) }),
-        Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("d7EntranceRoom", 0x8B) }),
-        Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
-        Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
-        Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
-        Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
-        Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
-        Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
-        Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
-        Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music1", 0x2A10) }),
-        Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music1", 0x2010) }),
-        Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music1", 0x3510) }),
-        Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
-        Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0xCE) }),
-        Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0x0A) }),
-        Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0xE9) }),
-        Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
-        Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
-        Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("music2", 0x39), Tuple.Create("overworldTile", 0x06) }),
-    };
-
-    vars.ladxSplits = new List<Tuple<string, List<Tuple<string, int>>>>
-    {
-        Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xD3) }),
-        Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x24) }),
-        Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xB5) }),
-        Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x2B) }),
-        Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xD9) }),
-        Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
-        Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
-        Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x10) }),
-        Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
-        Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music1", 0x610C) }),
-    };
-
-    vars.laSplits = new List<Tuple<string, List<Tuple<string, int>>>>
-    {
-        Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d1InstrumentRoom", 0x90) }),
-        Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d2InstrumentRoom", 0x90) }),
-        Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d3InstrumentRoom", 0x90) }),
-        Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d4InstrumentRoom", 0x90) }),
-        Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d5InstrumentRoom", 0x90) }),
-        Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
-        Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
-        Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
-    };
-
-    vars.GenerateWatcherList = (Func<MemoryWatcherList>)(() =>
+    vars.GetWatcherList = (Func<MemoryWatcherList>)(() =>
     {
         return new MemoryWatcherList
         {
@@ -208,8 +159,71 @@ startup
             //new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1C0C) { Name = "photos" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xEFF) { Name = "resetCheck" },
             new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1B95) { Name = "fileSelect" },
-            //new MemoryWatcher<int>((IntPtr)vars.wramAddr + 0x1C10) { Name = "versionCheck" },
         };
+    });
+
+    vars.GetSplitList = (Func<int, List<Tuple<string, List<Tuple<string, int>>>>>)((flag) =>
+    {
+        var list = new List<Tuple<string, List<Tuple<string, int>>>>
+        {
+            Tuple.Create("d1Enter", new List<Tuple<string, int>> { Tuple.Create("d1EntranceRoom", 0x8E) }),
+            Tuple.Create("d2Enter", new List<Tuple<string, int>> { Tuple.Create("d2EntranceRoom", 0x8C) }),
+            Tuple.Create("d3Enter", new List<Tuple<string, int>> { Tuple.Create("d3EntranceRoom", 0x8D) }),
+            Tuple.Create("d4Enter", new List<Tuple<string, int>> { Tuple.Create("d4EntranceRoom", 0x8C) }),
+            Tuple.Create("d5Enter", new List<Tuple<string, int>> { Tuple.Create("d5EntranceRoom", 0x8A) }),
+            Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("d6EntranceRoom", 0x8B) }),
+            Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("d7EntranceRoom", 0x8B) }),
+            Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
+            Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
+            Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
+            Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
+            Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
+            Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
+            Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
+            Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music1", 0x2A10) }),
+            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music1", 0x2010) }),
+            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music1", 0x3510) }),
+            Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
+            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0xCE) }),
+            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0x0A) }),
+            Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0xE9) }),
+            Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
+            Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
+            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("music2", 0x39), Tuple.Create("overworldTile", 0x06) }),
+        };
+
+        if (flag == 0) //LA
+        {
+            list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
+            {
+                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d1InstrumentRoom", 0x90) }),
+                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d2InstrumentRoom", 0x90) }),
+                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d3InstrumentRoom", 0x90) }),
+                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d4InstrumentRoom", 0x90) }),
+                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d5InstrumentRoom", 0x90) }),
+                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
+                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
+            });
+        }
+        else if (flag == 0x80) //LADX
+        {
+            list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
+            {
+                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xD3) }),
+                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x24) }),
+                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xB5) }),
+                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x2B) }),
+                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xD9) }),
+                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
+                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x10) }),
+                Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
+                Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music1", 0x610C) }),
+            });
+        }
+
+        return list;
     });
 }
 
@@ -217,8 +231,8 @@ init
 {
     vars.wramAddr = IntPtr.Zero;
     vars.romAddr = IntPtr.Zero;
+    vars.cgbFlag = 0xFF;
     vars.watchers = new MemoryWatcherList();
-    vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
 
     vars.stopwatch.Restart();
 }
@@ -235,22 +249,8 @@ update
 
         if (vars.wramAddr != IntPtr.Zero && vars.romAddr != IntPtr.Zero)
         {
-            vars.watchers = vars.GenerateWatcherList();
-            vars.watchers.UpdateAll(game);
-
-            vars.splits.AddRange(vars.baseSplits);
-
-            var flag = memory.ReadValue<byte>((IntPtr)vars.romAddr + 0x143);
-            if (flag == 0)
-            {
-                print("[Autosplitter] Splits loaded: LA");
-                vars.splits.AddRange(vars.laSplits);
-            }
-            else if (flag == 0x80)
-            {
-                print("[Autosplitter] Splits loaded: LADX");
-                vars.splits.AddRange(vars.ladxSplits);
-            }
+            vars.cgbFlag = memory.ReadValue<byte>((IntPtr)vars.romAddr + 0x143);
+            vars.watchers = vars.GetWatcherList();
 
             vars.stopwatch.Reset();
         }
@@ -282,21 +282,17 @@ split
     {
         if (settings[_split.Item1])
         {
-            //special case so that "d3Enter" doesn't split every time the dungeon is entered
-            if (_split.Item1 == "d3Enter" && vars.watchers["d3EntranceRoom"].Old != 0)
-                continue;
-
             var count = 0;
             foreach (var _condition in _split.Item2)
             {
-                var result = (count == 0) ? vars.watchers[_condition.Item1].Changed && vars.watchers[_condition.Item1].Current == _condition.Item2 : vars.watchers[_condition.Item1].Current == _condition.Item2;
-                if (result)
+                if (vars.watchers[_condition.Item1].Current == _condition.Item2)
                     count++;
             }
 
             if (count == _split.Item2.Count)
             {
                 print("[Autosplitter] Split: " + _split.Item1);
+                vars.splits.Remove(_split);
                 return true;
             }
         }
