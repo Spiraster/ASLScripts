@@ -11,14 +11,6 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
     - This script currently only has splits for the Any% route.
 
 ## Installation
-- Go to "Edit Splits..." in LiveSplit.
-- Enter the game name and click the "Activate" button to enable the autosplitter.
-
-## Set-up
-- The tree view lists all the events supported by the autosplitter.
-- Select (by checking the box) each event for which you would like the autosplitter to split.
-
-## Installation
 - Go to "Edit Splits..." in LiveSplit
 - Enter the name of the game in "Game Name"
     - This must be entered correctly for LiveSplit to know which script to load
