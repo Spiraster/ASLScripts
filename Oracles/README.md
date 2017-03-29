@@ -25,6 +25,7 @@ Other versions of the above emulators may work, but are untested. Other emulator
 ## Set-up
 - Go to "Edit Splits..." in LiveSplit
 - Click "Settings" to configure the autosplitter
+    - **Note:** If for some reason LiveSplit does not automatically load the script, click "Browse...", navigate to "\LiveSplit\Components\\" and select the appropriate script.
 
 Here you can enable/disable the options for auto start, auto reset, and auto splitting. If auto splitting is enabled, then you can select the events for which you want the autosplitter to split below under "Advanced".
 
