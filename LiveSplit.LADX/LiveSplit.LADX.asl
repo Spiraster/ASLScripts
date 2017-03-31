@@ -9,7 +9,7 @@ startup
     settings.Add("entrances", true, "Dungeon Entrance Splits");
     settings.Add("instruments", true, "Dungeon End Splits (Instruments)");
     settings.Add("items", true, "Item Splits");
-    settings.Add("misc", false, "Miscellaneous Splits");
+    settings.Add("misc", true, "Miscellaneous Splits");
 
     settings.CurrentDefaultParent = "entrances";
     settings.Add("d1Enter", true, "Tail Cave (D1)");
@@ -49,6 +49,7 @@ startup
     settings.CurrentDefaultParent = "misc";
     settings.Add("shop", false, "Shop Stealing");
     settings.Add("marin", false, "Marin");
+    settings.Add("d8Exit", false, "Exit D8 to Mountaintop");
     settings.Add("song1", false, "Ballad of the Wind Fish (Song 1)");
     settings.Add("song2", false, "Manbo's Mambo (Song 2)");
     settings.Add("song3", false, "Frog's Song of Soul (Song 3)");
@@ -144,6 +145,7 @@ startup
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6A) { Name = "d6Instrument" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6B) { Name = "d7Instrument" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6C) { Name = "d8Instrument" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1800) { Name = "d8Mountaintop" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B54) { Name = "overworldTile" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1BAE) { Name = "dungeonTile" },
             new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x13CA) { Name = "music1" },
@@ -204,6 +206,7 @@ startup
                 Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
                 Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
                 Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
+                Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
             });
         }
         else if (flag == 0x80) //LADX
