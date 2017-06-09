@@ -73,7 +73,7 @@ startup
         if (bgbPtr != IntPtr.Zero)
             return (IntPtr)proc.ReadValue<int>(bgbPtr);
         else if (gambattePtr != IntPtr.Zero)
-            return (IntPtr)proc.ReadValue<int>(gambattePtr - 0x10);
+            return (IntPtr)proc.ReadValue<int>(gambattePtr - 0x20);
         else
             return IntPtr.Zero;
     });
