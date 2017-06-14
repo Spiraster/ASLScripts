@@ -175,7 +175,7 @@ start
 
 reset
 {
-    return vars.watchers["resetCheck"].Current > 0;
+    //return vars.watchers["resetCheck"].Current > 0;
 }
 
 split
