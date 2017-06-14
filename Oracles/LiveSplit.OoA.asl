@@ -223,6 +223,11 @@ reset
 
 split
 {
+    //prevent splitting on the file select screen
+    var fs = vars.watchers["fileSelect1"].Current;
+    if (fs == 0x17 || fs == 0x23)
+        return false;
+
     foreach (var _split in vars.splits)
     {
         if (settings[_split.Item1])
