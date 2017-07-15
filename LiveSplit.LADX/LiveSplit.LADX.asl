@@ -148,8 +148,8 @@ startup
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1800) { Name = "d8Mountaintop" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B54) { Name = "overworldTile" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1BAE) { Name = "dungeonTile" },
-            new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x13CA) { Name = "music1" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13CA) { Name = "music2" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13CA) { Name = "music" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13CB) { Name = "music2" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13C8) { Name = "sound" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B11) { Name = "tailKey" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1920) { Name = "braceletRoom" },
@@ -182,30 +182,30 @@ startup
             Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
             Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
             Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
-            Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music1", 0x2A10) }),
-            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music1", 0x2010) }),
-            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music1", 0x3510) }),
+            Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("music2", 0x2A) }),
+            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x2A) }),
+            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xD4) }),
             Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
-            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0xCE) }),
-            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0x0A) }),
-            Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music2", 0x10), Tuple.Create("overworldTile", 0xE9) }),
-            Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
-            Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
-            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("music2", 0x39), Tuple.Create("overworldTile", 0x06) }),
+            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xCE) }),
+            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x0A) }),
+            Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xE9) }),
+            Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
+            Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
+            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("music", 0x39), Tuple.Create("overworldTile", 0x06) }),
         };
 
         if (flag == 0) //LA
         {
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
             {
-                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d1InstrumentRoom", 0x90) }),
-                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d2InstrumentRoom", 0x90) }),
-                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d3InstrumentRoom", 0x90) }),
-                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d4InstrumentRoom", 0x90) }),
-                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d5InstrumentRoom", 0x90) }),
-                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
-                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
+                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d1InstrumentRoom", 0x90) }),
+                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d2InstrumentRoom", 0x90) }),
+                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d3InstrumentRoom", 0x90) }),
+                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d4InstrumentRoom", 0x90) }),
+                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d5InstrumentRoom", 0x90) }),
+                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
+                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
                 Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
             });
         }
@@ -213,16 +213,16 @@ startup
         {
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
             {
-                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xD3) }),
-                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x24) }),
-                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xB5) }),
-                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x2B) }),
-                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0xD9) }),
-                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
-                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music2", 0x0B), Tuple.Create("overworldTile", 0x10) }),
+                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xD3) }),
+                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x24) }),
+                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xB5) }),
+                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x2B) }),
+                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xD9) }),
+                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
+                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x10) }),
                 Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
-                Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music1", 0x610C) }),
+                Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldTile", 0x77) }),
             });
         }
 
