@@ -40,7 +40,9 @@ startup
     settings.Add("birdKey", true, "Bird Key");
     settings.Add("bracelet", false, "Bracelet (L1)");
     settings.Add("boots", false, "Boots");
+    settings.Add("ocarina", false, "Ocarina");
     settings.Add("flippers", false, "Flippers");
+    settings.Add("l2Shield", false, "Shield (L2)");
     settings.Add("magicRod", false, "Magic Rod");
     settings.Add("magnifyingLens", false, "Magnifying Lens");
     settings.Add("l1Sword", false, "Sword (L1)");
@@ -154,7 +156,9 @@ startup
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B11) { Name = "tailKey" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1920) { Name = "braceletRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1946) { Name = "bootsRoom" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1ABE) { Name = "ocarinaRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B0C) { Name = "flippers" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A1A) { Name = "l2ShieldRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A37) { Name = "magicRodRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B73) { Name = "marin" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6E) { Name = "shopThefts" },
@@ -186,7 +190,9 @@ startup
             Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
             Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
             Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
+            Tuple.Create("ocarina", new List<Tuple<string, int>> { Tuple.Create("ocarinaRoom", 0x90) }),
             Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
+            Tuple.Create("l2Shield", new List<Tuple<string, int>> { Tuple.Create("l2ShieldRoom", 0x9E) }),
             Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
             Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
             Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("music2", 0x2A) }),
