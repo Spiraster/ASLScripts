@@ -158,7 +158,14 @@ startup
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A37) { Name = "magicRodRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B73) { Name = "marin" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6E) { Name = "shopThefts" },
-            //new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1C0C) { Name = "photos" },
+
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B0F) { Name = "seashells" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B5B) { Name = "hearts" },
+            new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1C0C) { Name = "photos" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B76) { Name = "maxPowder" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B77) { Name = "maxBombs" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B78) { Name = "maxArrows" },
+
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xEFF) { Name = "resetCheck" },
             new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1B95) { Name = "fileSelect" },
         };
