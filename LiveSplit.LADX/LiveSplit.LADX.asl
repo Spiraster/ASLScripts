@@ -49,6 +49,7 @@ startup
     settings.Add("l2Sword", false, "Sword (L2)");
 
     settings.CurrentDefaultParent = "misc";
+    settings.Add("woods", false, "Leaving the Mysterious Woods");
     settings.Add("shop", false, "Shop Stealing");
     settings.Add("marin", false, "Marin");
     settings.Add("d8Exit", false, "Exit D8 to Mountaintop");
@@ -187,6 +188,7 @@ startup
             Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("d6EntranceRoom", 0x8B) }),
             Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("d7EntranceRoom", 0x8B) }),
             Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
+            Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0x90), Tuple.Create("tailKey", 0x01) }),
             Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
             Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
             Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
