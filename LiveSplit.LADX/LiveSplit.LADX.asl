@@ -38,6 +38,7 @@ startup
     settings.Add("tailKey", true, "Tail Key");
     settings.Add("anglerKey", false, "Angler Key");
     settings.Add("birdKey", true, "Bird Key");
+    settings.Add("feather", false, "Feather");
     settings.Add("bracelet", false, "Bracelet (L1)");
     settings.Add("boots", false, "Boots");
     settings.Add("ocarina", false, "Ocarina");
@@ -155,6 +156,7 @@ startup
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13CB) { Name = "music2" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13C8) { Name = "sound" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B11) { Name = "tailKey" },
+            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x191D) { Name = "featherRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1920) { Name = "braceletRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1946) { Name = "bootsRoom" },
             new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1ABE) { Name = "ocarinaRoom" },
@@ -190,6 +192,7 @@ startup
             Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
             Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0x90), Tuple.Create("tailKey", 0x01) }),
             Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
+            Tuple.Create("feather", new List<Tuple<string, int>> { Tuple.Create("featherRoom", 0x98) }),
             Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
             Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
             Tuple.Create("ocarina", new List<Tuple<string, int>> { Tuple.Create("ocarinaRoom", 0x90) }),
