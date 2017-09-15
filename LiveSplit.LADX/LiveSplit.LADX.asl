@@ -210,7 +210,7 @@ startup
             Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xE9) }),
             Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
             Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
-            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("music", 0x39), Tuple.Create("overworldTile", 0x06) }),
+            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0201) }),
             Tuple.Create("creditsWarp", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0301) }),
         };
 
