@@ -1,42 +1,6 @@
-state("higan")
-{
-	byte fileSelect : 0x5171D6;
-	byte fanfare : 0x515C0A;
-	byte keyholeTimer : 0x516738;
-	byte peach : 0x516C11;
-}
-
-state("snes9x", "1.53")
-{
-	byte fileSelect : 0x2EFBA4, 0x1ED2;
-	byte fanfare : 0x2EFBA4, 0x906;
-	byte keyholeTimer : 0x2EFBA4, 0x1434;
-	byte peach : 0x2EFBA4, 0x190D;
-}
-
-state("snes9x-x64", "1.53")
-{
-	byte fileSelect : 0x405EC8, 0x1ED2;
-	byte fanfare : 0x405EC8, 0x906;
-	byte keyholeTimer : 0x405EC8, 0x1434;
-	byte peach : 0x405EC8, 0x190D;
-}
-
-state("snes9x", "1.54.1")
-{
-	byte fileSelect : 0x3410D4, 0x1ED2;
-	byte fanfare : 0x3410D4, 0x906;
-	byte keyholeTimer : 0x3410D4, 0x1434;
-	byte peach : 0x3410D4, 0x190D;
-}
-
-state("snes9x-x64", "1.54.1")
-{
-	byte fileSelect : 0x4DAF18, 0x1ED2;
-	byte fanfare : 0x4DAF18, 0x906;
-	byte keyholeTimer : 0x4DAF18, 0x1434;
-	byte peach : 0x4DAF18, 0x190D;
-}
+state("higan"){}
+state("snes9x"){}
+state("snes9x-x64"){}
 
 startup
 {
@@ -48,28 +12,68 @@ startup
 
 init
 {
-	var memSize = modules.First().ModuleMemorySize;
-	if (memSize == 6447104 || memSize == 7946240)
-		version = "1.54.1";
+	int memoryOffset = 0;
+	while (memoryOffset == 0)
+	{
+		switch (modules.First().ModuleMemorySize)
+		{
+			case 5914624: //snes9x (1.53_x86)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x6EFBA4);
+				break;
+			case 6909952: //snes9x (1.53_x64)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x140405EC8);
+				break;
+			case 6447104: //snes9x (1.54.1_x86)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x7410D4);
+				break;
+			case 7946240: //snes9x (1.54.1_x64)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x1404DAF18);
+				break;
+			case 12509184: //higan (v102)
+				memoryOffset = 0x915304;
+				break;
+			case 13062144: //higan (v103)
+				memoryOffset = 0x937324;
+				break;
+			case 15859712: //higan (v104)
+				memoryOffset = 0x952144;
+				break;
+			default:
+				memoryOffset = 1;
+				break;
+		}
+	}
+
+	vars.watchers = new MemoryWatcherList
+	{
+		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1ED2) { Name = "fileSelect" },
+		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x906) { Name = "fanfare" },
+		new MemoryWatcher<short>((IntPtr)memoryOffset + 0x1434) { Name = "keyholeTimer" },
+		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x190D) { Name = "peach" },
+	};
+}
+
+update
+{
+	vars.watchers.UpdateAll(game);
 }
 
 start
 {
-	return old.fileSelect == 0 && current.fileSelect == 1;
+	return vars.watchers["fileSelect"].Old == 0 && vars.watchers["fileSelect"].Current == 1;
 }
 
 reset
 {
-	return old.fileSelect == 1 && current.fileSelect != 1;
+	return vars.watchers["fileSelect"].Old != 0 && vars.watchers["fileSelect"].Current == 0;
 }
 
 split
 {
-	var goalExit = settings["levels"] && old.fanfare == 0 && current.fanfare == 1;
-	var keyExit = settings["levels"] && old.keyholeTimer == 0 && current.keyholeTimer > 0;
-	var bossExit = settings["bosses"] && old.fanfare == 0 && current.fanfare == 1;
-	var bowserDefeated = settings["bosses"] && old.peach == 0 && current.peach == 1;
-
+	var goalExit = settings["levels"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1;
+	var keyExit = settings["levels"] && vars.watchers["keyholeTimer"].Old == 0 && vars.watchers["keyholeTimer"].Current == 0x0030;
+	var bossExit = settings["bosses"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1;
+	var bowserDefeated = settings["bosses"] && vars.watchers["peach"].Old == 0 && vars.watchers["peach"].Current == 1;
 
 	return goalExit || keyExit || bossExit || bowserDefeated;
 }

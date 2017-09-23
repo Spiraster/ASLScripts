@@ -3,6 +3,8 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 
 **Supported emulators:**
 - higan v102
+- higan v103
+- higan v104
 - Snes9x 1.53
 - Snes9x 1.54.1
 
