@@ -1,7 +1,6 @@
 state("bgb") {}
 state("gambatte") {}
 state("gambatte_qt") {}
-state("gambatte_qt_win32-r571") {}
 
 startup
 {
@@ -62,120 +61,96 @@ startup
 
     vars.stopwatch = new Stopwatch();
 
-    vars.wramTarget_bgb = new SigScanTarget(0, "?? ?? ?? ?? 34 00 00 00 12 00 00 00 01 00 00 00 03 00 00 00 32 78 32");
-    vars.wramTarget_gambatte = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-    vars.romTarget = new SigScanTarget(0, "BB B9 33 3E 5A 45 4C 44 41");
-
-    timer.OnStart += (s, e) =>
+    vars.timer_OnStart = (EventHandler)((s, e) =>
     {
-        vars.splits = vars.GetSplitList(vars.cgbFlag);
-    };
+        vars.splits = vars.GetSplitList(vars.musicMode.Current);
+    });
+    timer.OnStart += vars.timer_OnStart;
 
-    vars.FindWRAM = (Func<Process, IntPtr>)((proc) => 
+    vars.wramTarget = new SigScanTarget(-0x20, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00"); //gambatte
+
+    vars.FindWRAM = (Func<Process, int, IntPtr>)((proc, ptr) => 
     {
-        print("[Autosplitter] Scanning memory for WRAM");
-
-        var bgbPtr = IntPtr.Zero;
-        var gambattePtr = IntPtr.Zero;
-
-        foreach (var page in proc.MemoryPages())
+        if (ptr != 0) //bgb
+            return proc.ReadPointer(proc.ReadPointer(proc.ReadPointer((IntPtr)ptr) + 0x34) + 0xC0) + 0xC000;
+        else //gambatte
         {
-            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            print("[Autosplitter] Scanning memory");
+            var wramPtr = IntPtr.Zero;
 
-            if (bgbPtr == IntPtr.Zero && gambattePtr == IntPtr.Zero)
+            foreach (var page in proc.MemoryPages())
             {
-                bgbPtr = scanner.Scan(vars.wramTarget_bgb);
-                gambattePtr = scanner.Scan(vars.wramTarget_gambatte);
+                var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+
+                if (wramPtr == IntPtr.Zero)
+                    wramPtr = scanner.Scan(vars.wramTarget);
+
+                if (wramPtr != IntPtr.Zero)
+                    break;
             }
-            else
-                break;
-        }
 
-        if (bgbPtr != IntPtr.Zero)
-            return (IntPtr)proc.ReadValue<int>(bgbPtr);
-        else if (gambattePtr != IntPtr.Zero)
-            return (IntPtr)proc.ReadValue<int>(gambattePtr - 0x20);
-        else
-            return IntPtr.Zero;
+            if (wramPtr != IntPtr.Zero)
+                return proc.ReadPointer(wramPtr);
+            else
+                return IntPtr.Zero;
+        }
     });
 
-    vars.FindROM = (Func<Process, IntPtr>)((proc) =>
-    {
-        print("[Autosplitter] Scanning memory for ROM");
-
-        var ptr = IntPtr.Zero;
-
-        foreach (var page in proc.MemoryPages())
-        {
-            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-
-            if (ptr == IntPtr.Zero)
-                ptr = scanner.Scan(vars.romTarget);
-            else
-                break;
-        }
-
-        if (ptr != IntPtr.Zero)
-            return ptr - 0x130;
-        else
-            return IntPtr.Zero;
-    });
-
-    vars.GetWatcherList = (Func<MemoryWatcherList>)(() =>
+    vars.GetWatcherList = (Func<IntPtr, MemoryWatcherList>)((wramOffset) =>
     {
         return new MemoryWatcherList
         {
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1917) { Name = "d1EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1936) { Name = "d2EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1952) { Name = "d3EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x197A) { Name = "d4EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x19A1) { Name = "d5EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x19D4) { Name = "d6EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A0E) { Name = "d7EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A5D) { Name = "d8EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1DF2) { Name = "d0EntranceRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1902) { Name = "d1InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x192A) { Name = "d2InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1959) { Name = "d3InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1962) { Name = "d4InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1982) { Name = "d5InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x19B5) { Name = "d6InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A2C) { Name = "d7InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A30) { Name = "d8InstrumentRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B65) { Name = "d1Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B66) { Name = "d2Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B67) { Name = "d3Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B68) { Name = "d4Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B69) { Name = "d5Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6A) { Name = "d6Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6B) { Name = "d7Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6C) { Name = "d8Instrument" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1800) { Name = "d8Mountaintop" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B54) { Name = "overworldTile" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1BAE) { Name = "dungeonTile" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13CA) { Name = "music" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13CB) { Name = "music2" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x13C8) { Name = "sound" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B11) { Name = "tailKey" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x191D) { Name = "featherRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1920) { Name = "braceletRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1946) { Name = "bootsRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1ABE) { Name = "ocarinaRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B0C) { Name = "flippers" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A1A) { Name = "l2ShieldRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1A37) { Name = "magicRodRoom" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B73) { Name = "marin" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B6E) { Name = "shopThefts" },
+            new MemoryWatcher<byte>(wramOffset + 0x1917) { Name = "d1EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1936) { Name = "d2EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1952) { Name = "d3EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x197A) { Name = "d4EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x19A1) { Name = "d5EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x19D4) { Name = "d6EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1A0E) { Name = "d7EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1A5D) { Name = "d8EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1DF2) { Name = "d0EntranceRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1902) { Name = "d1InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x192A) { Name = "d2InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1959) { Name = "d3InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1962) { Name = "d4InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1982) { Name = "d5InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x19B5) { Name = "d6InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1A2C) { Name = "d7InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1A30) { Name = "d8InstrumentRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B65) { Name = "d1Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B66) { Name = "d2Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B67) { Name = "d3Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B68) { Name = "d4Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B69) { Name = "d5Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B6A) { Name = "d6Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B6B) { Name = "d7Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B6C) { Name = "d8Instrument" },
+            new MemoryWatcher<byte>(wramOffset + 0x1800) { Name = "d8Mountaintop" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B54) { Name = "overworldTile" },
+            new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "dungeonTile" },
+            new MemoryWatcher<byte>(wramOffset + 0x13CA) { Name = "music" },
+            new MemoryWatcher<byte>(wramOffset + 0x13CB) { Name = "music2" },
+            new MemoryWatcher<byte>(wramOffset + 0x13C8) { Name = "sound" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B11) { Name = "tailKey" },
+            new MemoryWatcher<byte>(wramOffset + 0x191D) { Name = "featherRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1920) { Name = "braceletRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1946) { Name = "bootsRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1ABE) { Name = "ocarinaRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B0C) { Name = "flippers" },
+            new MemoryWatcher<byte>(wramOffset + 0x1A1A) { Name = "l2ShieldRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1A37) { Name = "magicRodRoom" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B73) { Name = "marin" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B6E) { Name = "shopThefts" },
 
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B0F) { Name = "seashells" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B5B) { Name = "hearts" },
-            new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1C0C) { Name = "photos" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B76) { Name = "maxPowder" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B77) { Name = "maxBombs" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1B78) { Name = "maxArrows" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B0F) { Name = "seashells" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B5B) { Name = "hearts" },
+            new MemoryWatcher<short>(wramOffset + 0x1C0C) { Name = "photos" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B76) { Name = "maxPowder" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B77) { Name = "maxBombs" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B78) { Name = "maxArrows" },
 
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xEFF) { Name = "resetCheck" },
-            new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0x1B95) { Name = "gameState" },
+            new MemoryWatcher<byte>(wramOffset + 0xEFF) { Name = "resetCheck" },
+            new MemoryWatcher<short>(wramOffset + 0x1B95) { Name = "gameState" },
         };
     });
 
@@ -214,8 +189,9 @@ startup
             Tuple.Create("creditsWarp", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0301) }),
         };
 
-        if (flag == 0) //LA
+        if (flag == 0xD4 || flag == 0xC5) //LA
         {
+            print("[Autosplitter] LA");
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
             {
                 Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d1InstrumentRoom", 0x90) }),
@@ -229,8 +205,9 @@ startup
                 Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
             });
         }
-        else if (flag == 0x80) //LADX
+        else if (flag == 0xD9 || flag == 0xCA) //LADX
         {
+            print("[Autosplitter] LADX");
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
             {
                 Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xD3) }),
@@ -252,28 +229,48 @@ startup
 
 init
 {
-    vars.wramAddr = IntPtr.Zero;
-    vars.romAddr = IntPtr.Zero;
-    vars.cgbFlag = 0xFF;
+    vars.memorySize = modules.First().ModuleMemorySize;
+
+    vars.wramOffset = IntPtr.Zero;
+    vars.musicMode = new MemoryWatcher<byte>(IntPtr.Zero);
     vars.watchers = new MemoryWatcherList();
+    vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
 
     vars.stopwatch.Restart();
 }
 
 update
 {
-    if (vars.stopwatch.ElapsedMilliseconds > 1000)
-    {
-        if (vars.wramAddr == IntPtr.Zero)
-            vars.wramAddr = vars.FindWRAM(game);
-
-        if (vars.romAddr == IntPtr.Zero)
-            vars.romAddr = vars.FindROM(game);
-
-        if (vars.wramAddr != IntPtr.Zero && vars.romAddr != IntPtr.Zero)
+	if (vars.stopwatch.ElapsedMilliseconds > 1500)
+	{
+        if (vars.wramOffset == IntPtr.Zero)
         {
-            vars.cgbFlag = memory.ReadValue<byte>((IntPtr)vars.romAddr + 0x143);
-            vars.watchers = vars.GetWatcherList();
+            switch ((int)vars.memorySize)
+            {
+                case 1691648: //bgb (1.5.1)
+                    vars.wramOffset = vars.FindWRAM(game, 0x55BC7C);
+                    break;
+                case 1699840: //bgb (1.5.2)
+                    vars.wramOffset = vars.FindWRAM(game, 0x55DCA0);
+                    break;
+                case 1736704: //bgb (1.5.3/1.5.4)
+                    vars.wramOffset = vars.FindWRAM(game, 0x564EBC);
+                    break;
+                case 14290944: //gambatte-speedrun (r600)
+                case 14180352: //gambatte-speedrun (r604)
+                    vars.wramOffset = vars.FindWRAM(game, 0);
+                    break;
+                default:
+                    vars.wramOffset = (IntPtr)1;
+                    break;
+            }
+        }
+
+        if (vars.wramOffset != IntPtr.Zero)
+        {
+            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
+            vars.watchers = vars.GetWatcherList(vars.wramOffset);
+            vars.musicMode = new MemoryWatcher<byte>(vars.wramOffset + 0x1301);
 
             vars.stopwatch.Reset();
         }
@@ -282,10 +279,11 @@ update
             vars.stopwatch.Restart();
             return false;
         }
-    }
+	}
     else if (vars.watchers.Count == 0)
         return false;
-
+    
+    vars.musicMode.Update(game);
     vars.watchers.UpdateAll(game);
 }
 
@@ -320,4 +318,9 @@ split
             }
         }
     }
+}
+
+shutdown
+{
+    timer.OnStart -= vars.timer_OnStart;
 }
