@@ -1,7 +1,6 @@
 state("bgb") {}
 state("gambatte") {}
 state("gambatte_qt") {}
-state("gambatte_qt_win32-r571") {}
 
 startup
 {
@@ -61,80 +60,79 @@ startup
 
     vars.stopwatch = new Stopwatch();
 
-    vars.wramTarget_bgb = new SigScanTarget(0, "?? ?? ?? ?? 34 00 00 00 12 00 00 00 01 00 00 00 03 00 00 00 32 78 32");
-    vars.wramTarget_gambatte = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-
-    timer.OnStart += (s, e) =>
+    vars.timer_OnStart = (EventHandler)((s, e) =>
     {
         vars.splits = vars.GetSplitList();
-    };
+    });
+    timer.OnStart += vars.timer_OnStart;
 
-    vars.FindWRAM = (Func<Process, IntPtr>)((proc) => 
+    vars.wramTarget = new SigScanTarget(-0x20, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00"); //gambatte
+
+    vars.FindWRAM = (Func<Process, int, IntPtr>)((proc, ptr) => 
     {
-        print("[Autosplitter] Scanning memory for WRAM");
-
-        var bgbPtr = IntPtr.Zero;
-        var gambattePtr = IntPtr.Zero;
-
-        foreach (var page in proc.MemoryPages())
+        if (ptr != 0) //bgb
+            return proc.ReadPointer(proc.ReadPointer(proc.ReadPointer((IntPtr)ptr) + 0x34) + 0xC0) + 0xC000;
+        else //gambatte
         {
-            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            print("[Autosplitter] Scanning memory");
+            var wramPtr = IntPtr.Zero;
 
-            if (bgbPtr == IntPtr.Zero && gambattePtr == IntPtr.Zero)
+            foreach (var page in proc.MemoryPages())
             {
-                bgbPtr = scanner.Scan(vars.wramTarget_bgb);
-                gambattePtr = scanner.Scan(vars.wramTarget_gambatte);
-            }
-            else
-                break;
-        }
+                var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
 
-        if (bgbPtr != IntPtr.Zero)
-            return (IntPtr)proc.ReadValue<int>(bgbPtr);
-        else if (gambattePtr != IntPtr.Zero)
-            return (IntPtr)proc.ReadValue<int>(gambattePtr - 0x20);
-        else
-            return IntPtr.Zero;
+                if (wramPtr == IntPtr.Zero)
+                    wramPtr = scanner.Scan(vars.wramTarget);
+
+                if (wramPtr != IntPtr.Zero)
+                    break;
+            }
+
+            if (wramPtr != IntPtr.Zero)
+                return proc.ReadPointer(wramPtr);
+            else
+                return IntPtr.Zero;
+        }
     });
 
-    vars.GetWatcherList = (Func<MemoryWatcherList>)(() =>
+    vars.GetWatcherList = (Func<IntPtr, MemoryWatcherList>)((wramOffset) =>
     {   
         return new MemoryWatcherList
         {
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x924) { Name = "d1Enter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x946) { Name = "d2Enter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x966) { Name = "d3Enter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x991) { Name = "d4Enter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x9BB) { Name = "d5Enter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xA44) { Name = "d6Enter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x9D4) { Name = "veranEnter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x911) { Name = "d1Ess" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x938) { Name = "d2Ess" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x949) { Name = "d3Ess" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xA37) { Name = "d6Ess" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x10B3) { Name = "nayruHP" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x10A9) { Name = "veranHP" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1084) { Name = "bossPhase" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x6B2) { Name = "sword" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x738) { Name = "seedSatchel" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x928) { Name = "feather" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x958) { Name = "seedShooter" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x987) { Name = "switchHook" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x9A5) { Name = "cane" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x6B5) { Name = "flute" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x8AE) { Name = "harp1" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x88F) { Name = "harp2" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x6A4) { Name = "raft" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x6C2) { Name = "tuniNut" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x8E7) { Name = "lavaJuice" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xA13) { Name = "mermaidSuit" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xA1C) { Name = "d6BossKey" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x82E) { Name = "d2Skip" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x8AA) { Name = "shipwreck" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x709) { Name = "greatMoblin" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0xB00) { Name = "fileSelect1" },
-            new MemoryWatcher<short>((IntPtr)vars.wramAddr + 0xBB3) { Name = "fileSelect2" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1EFF) { Name = "resetCheck" },
+            new MemoryWatcher<byte>(wramOffset + 0x924) { Name = "d1Enter" },
+            new MemoryWatcher<byte>(wramOffset + 0x946) { Name = "d2Enter" },
+            new MemoryWatcher<byte>(wramOffset + 0x966) { Name = "d3Enter" },
+            new MemoryWatcher<byte>(wramOffset + 0x991) { Name = "d4Enter" },
+            new MemoryWatcher<byte>(wramOffset + 0x9BB) { Name = "d5Enter" },
+            new MemoryWatcher<byte>(wramOffset + 0xA44) { Name = "d6Enter" },
+            new MemoryWatcher<byte>(wramOffset + 0x9D4) { Name = "veranEnter" },
+            new MemoryWatcher<byte>(wramOffset + 0x911) { Name = "d1Ess" },
+            new MemoryWatcher<byte>(wramOffset + 0x938) { Name = "d2Ess" },
+            new MemoryWatcher<byte>(wramOffset + 0x949) { Name = "d3Ess" },
+            new MemoryWatcher<byte>(wramOffset + 0xA37) { Name = "d6Ess" },
+            new MemoryWatcher<byte>(wramOffset + 0x10B3) { Name = "nayruHP" },
+            new MemoryWatcher<byte>(wramOffset + 0x10A9) { Name = "veranHP" },
+            new MemoryWatcher<byte>(wramOffset + 0x1084) { Name = "bossPhase" },
+            new MemoryWatcher<byte>(wramOffset + 0x6B2) { Name = "sword" },
+            new MemoryWatcher<byte>(wramOffset + 0x738) { Name = "seedSatchel" },
+            new MemoryWatcher<byte>(wramOffset + 0x928) { Name = "feather" },
+            new MemoryWatcher<byte>(wramOffset + 0x958) { Name = "seedShooter" },
+            new MemoryWatcher<byte>(wramOffset + 0x987) { Name = "switchHook" },
+            new MemoryWatcher<byte>(wramOffset + 0x9A5) { Name = "cane" },
+            new MemoryWatcher<byte>(wramOffset + 0x6B5) { Name = "flute" },
+            new MemoryWatcher<byte>(wramOffset + 0x8AE) { Name = "harp1" },
+            new MemoryWatcher<byte>(wramOffset + 0x88F) { Name = "harp2" },
+            new MemoryWatcher<byte>(wramOffset + 0x6A4) { Name = "raft" },
+            new MemoryWatcher<byte>(wramOffset + 0x6C2) { Name = "tuniNut" },
+            new MemoryWatcher<byte>(wramOffset + 0x8E7) { Name = "lavaJuice" },
+            new MemoryWatcher<byte>(wramOffset + 0xA13) { Name = "mermaidSuit" },
+            new MemoryWatcher<byte>(wramOffset + 0xA1C) { Name = "d6BossKey" },
+            new MemoryWatcher<byte>(wramOffset + 0x82E) { Name = "d2Skip" },
+            new MemoryWatcher<byte>(wramOffset + 0x8AA) { Name = "shipwreck" },
+            new MemoryWatcher<byte>(wramOffset + 0x709) { Name = "greatMoblin" },
+            new MemoryWatcher<byte>(wramOffset + 0xB00) { Name = "fileSelect1" },
+            new MemoryWatcher<short>(wramOffset + 0xBB3) { Name = "fileSelect2" },
+            //new MemoryWatcher<byte>(wramOffset + 0x1EFF) { Name = "resetCheck" },
         };
     });
 
@@ -180,23 +178,44 @@ startup
 }
 
 init
-{
-    vars.wramAddr = IntPtr.Zero;
+{    
+    vars.memorySize = modules.First().ModuleMemorySize;
+
+    vars.wramOffset = IntPtr.Zero;
     vars.watchers = new MemoryWatcherList();
+    vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
 
     vars.stopwatch.Restart();
 }
 
 update
 {
-    if (vars.stopwatch.ElapsedMilliseconds > 1000)
+    if (vars.stopwatch.ElapsedMilliseconds > 1500)
     {
-        vars.wramAddr = vars.FindWRAM(game);
-
-        if (vars.wramAddr != IntPtr.Zero)
+        switch ((int)vars.memorySize)
         {
-            vars.watchers = vars.GetWatcherList();
+            case 1691648: //bgb (1.5.1)
+                vars.wramOffset = vars.FindWRAM(game, 0x55BC7C);
+                break;
+            case 1699840: //bgb (1.5.2)
+                vars.wramOffset = vars.FindWRAM(game, 0x55DCA0);
+                break;
+            case 1736704: //bgb (1.5.3/1.5.4)
+                vars.wramOffset = vars.FindWRAM(game, 0x564EBC);
+                break;
+            case 14290944: //gambatte-speedrun (r600)
+            case 14180352: //gambatte-speedrun (r604)
+                vars.wramOffset = vars.FindWRAM(game, 0);
+                break;
+            default:
+                vars.wramOffset = (IntPtr)1;
+                break;
+        }
 
+        if (vars.wramOffset != IntPtr.Zero)
+        {
+            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
+            vars.watchers = vars.GetWatcherList(vars.wramOffset);
             vars.stopwatch.Reset();
         }
         else
@@ -247,4 +266,9 @@ split
             }
         }
     }
+}
+
+shutdown
+{
+    timer.OnStart -= vars.timer_OnStart;
 }

@@ -30,56 +30,57 @@ startup
 
     vars.stopwatch = new Stopwatch();
 
-    vars.wramTarget_gambatte = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-
-    timer.OnStart += (s, e) =>
+    vars.timer_OnStart = (EventHandler)((s, e) =>
     {
         vars.splits = vars.GetSplitList();
-    };
+    });
+    timer.OnStart += vars.timer_OnStart;
+
+    vars.ramTarget = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
 
     vars.FindRAM = (Func<Process, Tuple<IntPtr, IntPtr>>)((proc) => 
     {
-        print("[Autosplitter] Scanning memory for RAM");
-
-        var gambattePtr = IntPtr.Zero;
+        print("[Autosplitter] Scanning memory");
+        var ramPtr = IntPtr.Zero;
 
         foreach (var page in proc.MemoryPages())
         {
             var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
 
-            if (gambattePtr == IntPtr.Zero)
-                gambattePtr = scanner.Scan(vars.wramTarget_gambatte);
-            else
+            if (ramPtr == IntPtr.Zero)
+                ramPtr = scanner.Scan(vars.ramTarget);
+            
+            if (ramPtr != IntPtr.Zero)
                 break;
         }
 
-        if (gambattePtr != IntPtr.Zero)
-            return Tuple.Create((IntPtr)proc.ReadValue<int>(gambattePtr - 0x20), (IntPtr)(gambattePtr + 0x1E0)); //(WRAM, HRAM)
+        if (ramPtr != IntPtr.Zero)
+            return Tuple.Create(proc.ReadPointer(ramPtr - 0x20), ramPtr + 0x1E0); //(WRAM, HRAM)
         else
             return Tuple.Create(IntPtr.Zero, IntPtr.Zero);
     });
 
-    vars.GetWatcherList = (Func<MemoryWatcherList>)(() =>
+    vars.GetWatcherList = (Func<IntPtr, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset) =>
     {   
         return new MemoryWatcherList
         {
             //WRAM
-            new MemoryWatcher<uint>((IntPtr)vars.wramAddr + 0x03C9) { Name = "fileSelectTiles" },
-            new MemoryWatcher<uint>((IntPtr)vars.wramAddr + 0x0477) { Name = "resetTiles" },
-            new MemoryWatcher<uint>((IntPtr)vars.wramAddr + 0x0D40) { Name = "hofPlayerShown" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x0FD8) { Name = "opponentPkmn" },
-            new MemoryWatcher<uint>((IntPtr)vars.wramAddr + 0x0FDA) { Name = "opponentPkmnName" },
-            new MemoryWatcher<uint>((IntPtr)vars.wramAddr + 0x104A) { Name = "opponentName" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x1163) { Name = "partyCount" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x135E) { Name = "mapIndex" },
-            new MemoryWatcher<ushort>((IntPtr)vars.wramAddr + 0x1361) { Name = "playerPos" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x176C) { Name = "fluteFlag" },
-            new MemoryWatcher<byte>((IntPtr)vars.wramAddr + 0x17E0) { Name = "hm02Flag" },
-            new MemoryWatcher<ushort>((IntPtr)vars.wramAddr + 0x1FD7) { Name = "hofFadeTimer" },
-            new MemoryWatcher<ushort>((IntPtr)vars.wramAddr + 0x1FFD) { Name = "state" },
+            new MemoryWatcher<uint>(wramOffset + 0x03C9) { Name = "fileSelectTiles" },
+            new MemoryWatcher<uint>(wramOffset + 0x0477) { Name = "resetTiles" },
+            new MemoryWatcher<uint>(wramOffset + 0x0D40) { Name = "hofPlayerShown" },
+            new MemoryWatcher<byte>(wramOffset + 0x0FD8) { Name = "opponentPkmn" },
+            new MemoryWatcher<uint>(wramOffset + 0x0FDA) { Name = "opponentPkmnName" },
+            new MemoryWatcher<uint>(wramOffset + 0x104A) { Name = "opponentName" },
+            new MemoryWatcher<byte>(wramOffset + 0x1163) { Name = "partyCount" },
+            new MemoryWatcher<byte>(wramOffset + 0x135E) { Name = "mapIndex" },
+            new MemoryWatcher<ushort>(wramOffset + 0x1361) { Name = "playerPos" },
+            new MemoryWatcher<byte>(wramOffset + 0x176C) { Name = "fluteFlag" },
+            new MemoryWatcher<byte>(wramOffset + 0x17E0) { Name = "hm02Flag" },
+            new MemoryWatcher<ushort>(wramOffset + 0x1FD7) { Name = "hofFadeTimer" },
+            new MemoryWatcher<ushort>(wramOffset + 0x1FFD) { Name = "state" },
 
             //HRAM  
-            new MemoryWatcher<byte>((IntPtr)vars.hramAddr + 0x33) { Name = "input" },         
+            new MemoryWatcher<byte>(hramOffset + 0x33) { Name = "input" },         
         };
     });
 
@@ -115,8 +116,10 @@ startup
 
 init
 {
-    vars.wramAddr = IntPtr.Zero;
-    vars.hramAddr = IntPtr.Zero;
+    vars.memorySize = modules.First().ModuleMemorySize;
+
+    vars.wramOffset = IntPtr.Zero;
+    vars.hramOffset = IntPtr.Zero;
     vars.watchers = new MemoryWatcherList();
     vars.splits = new List<Tuple<string, List<Tuple<string, uint>>>>();
 
@@ -125,17 +128,17 @@ init
 
 update
 {
-    if (vars.stopwatch.ElapsedMilliseconds > 1000)
+    if (vars.stopwatch.ElapsedMilliseconds > 1500)
     {
         var scan = vars.FindRAM(game);        
-        vars.wramAddr = scan.Item1;
-        vars.hramAddr = scan.Item2;
+        vars.wramOffset = scan.Item1;
+        vars.hramOffset = scan.Item2;
 
-        if (vars.wramAddr != IntPtr.Zero)
+        if (vars.wramOffset != IntPtr.Zero)
         {
-            vars.watchers = vars.GetWatcherList();
+            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8") + ", HRAM: " + vars.hramOffset.ToString("X8"));
+            vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.hramOffset);
             vars.stopwatch.Reset();
-            print("WRAM: " + vars.wramAddr.ToString("X8") + ", HRAM: " + vars.hramAddr.ToString("X8"));
         }
         else
         {
@@ -180,4 +183,9 @@ split
             }
         }
     }
+}
+
+shutdown
+{
+    timer.OnStart -= vars.timer_OnStart;
 }
