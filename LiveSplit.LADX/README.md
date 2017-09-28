@@ -2,13 +2,8 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for Link's Awakening (GB) and Link's Awakening DX (GBC) on emulator.
 
 **Supported emulators:**
-- BGB 1.5.1
-- BGB 1.5.2
-- BGB 1.5.3
-- gambatte r571
-- gambatte-speedrun r600
-
-Other versions of the above emulators may work, but are untested. Other emulators (such as BizHawk) are currently unsupported and will not work.
+- BGB 1.5.1+
+- gambatte-speedrun r600+
 
 ## Features
 - Automatically start the timer when you select a file
@@ -32,7 +27,8 @@ Here you can enable/disable the options for auto start, auto reset, and auto spl
 ## Different Split Timings (for Dungeon End Splits)
 If you are playing LADX, the autosplitter will split upon touching the instrument of a given dungeon.
 
-If you are playing LA, the autosplitter will instead split upon leaving the dungeon after obtaining the instrument. This is to account for the use of ICS (Instrument Cutscene Skip) unique to LA.
+If you are playing LA, the autosplitter will instead split upon leaving the dungeon after obtaining the instrument. This is to account for the use of ICS (Instrument Cutscene Skip).
 
-## Credits
+## Contact
+If you encounter any issues or have any feature requests, please let me know! :)
 - [Spiraster](http://twitch.tv/spiraster)

@@ -2,11 +2,9 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for Super Mario World on emulator.
 
 **Supported emulators:**
-- higan v102
-- higan v103
-- higan v104
-- Snes9x 1.53
+- higan v102+
 - Snes9x 1.54.1
+- Snes9x 1.53
 
 ## Features
 - Automatically start the timer when you select a file
@@ -27,5 +25,6 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 
 Here you can enable/disable the options for auto start, auto reset, and auto splitting. If auto splitting is enabled, then you can select the events for which you want the autosplitter to split below under "Advanced".
 
-## Credits
+## Contact
+If you encounter any issues or have any feature requests, please let me know! :)
 - [Spiraster](http://twitch.tv/spiraster)
