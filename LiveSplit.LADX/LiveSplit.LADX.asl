@@ -243,27 +243,24 @@ update
 {
 	if (vars.stopwatch.ElapsedMilliseconds > 1500)
 	{
-        if (vars.wramOffset == IntPtr.Zero)
+        switch ((int)vars.memorySize)
         {
-            switch ((int)vars.memorySize)
-            {
-                case 1691648: //bgb (1.5.1)
-                    vars.wramOffset = vars.FindWRAM(game, 0x55BC7C);
-                    break;
-                case 1699840: //bgb (1.5.2)
-                    vars.wramOffset = vars.FindWRAM(game, 0x55DCA0);
-                    break;
-                case 1736704: //bgb (1.5.3/1.5.4)
-                    vars.wramOffset = vars.FindWRAM(game, 0x564EBC);
-                    break;
-                case 14290944: //gambatte-speedrun (r600)
-                case 14180352: //gambatte-speedrun (r604)
-                    vars.wramOffset = vars.FindWRAM(game, 0);
-                    break;
-                default:
-                    vars.wramOffset = (IntPtr)1;
-                    break;
-            }
+            case 1691648: //bgb (1.5.1)
+                vars.wramOffset = vars.FindWRAM(game, 0x55BC7C);
+                break;
+            case 1699840: //bgb (1.5.2)
+                vars.wramOffset = vars.FindWRAM(game, 0x55DCA0);
+                break;
+            case 1736704: //bgb (1.5.3/1.5.4)
+                vars.wramOffset = vars.FindWRAM(game, 0x564EBC);
+                break;
+            case 14290944: //gambatte-speedrun (r600)
+            case 14180352: //gambatte-speedrun (r604)
+                vars.wramOffset = vars.FindWRAM(game, 0);
+                break;
+            default:
+                vars.wramOffset = (IntPtr)1;
+                break;
         }
 
         if (vars.wramOffset != IntPtr.Zero)
