@@ -1,7 +1,7 @@
-# LiveSplit.Oracles
-These are [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for Oracle of Ages and Oracle of Seasons on emulator.
+# LiveSplit.OoA & LiveSplit.OoS
+These are [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for **The Legend of Zelda: Oracle of Ages** and **The Legend of Zelda: Oracle of Seasons** on emulator.
 
-**Supported emulators:**
+### Supported emulators:
 - BGB 1.5.1+
 - gambatte-speedrun r600+
 

@@ -1,7 +1,7 @@
 # LiveSplit.LADX
-This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for Link's Awakening (GB) and Link's Awakening DX (GBC) on emulator.
+This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **The Legend of Zelda: Link's Awakening** (GB) and **The Legend of Zelda: Link's Awakening DX** (GBC) on emulator.
 
-**Supported emulators:**
+### Supported emulators:
 - BGB 1.5.1+
 - gambatte-speedrun r600+
 

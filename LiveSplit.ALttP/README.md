@@ -1,7 +1,7 @@
 # LiveSplit.ALttP
-This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for A Link to the Past on emulator.
+This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **The Legend of Zelda: A Link to the Past** on emulator.
 
-**Supported emulators:**
+### Supported emulators:
 - higan v102+
 - Snes9x 1.54.1
 - Snes9x 1.53

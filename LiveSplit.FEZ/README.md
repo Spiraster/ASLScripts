@@ -1,5 +1,5 @@
 # LiveSplit.FEZ
-This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for FEZ (v1.12) on PC. Supports both Steam and standalone versions.
+This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **FEZ** (v1.12) on PC. Supports both Steam and standalone versions.
 
 **Note:** This script requires use of FEZ's speedrun mode (add "--gotta-gomez-fast" to the game's launch options).
 
