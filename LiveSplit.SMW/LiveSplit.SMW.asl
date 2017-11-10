@@ -38,6 +38,9 @@ init
 			case 15859712: //higan (v104)
 				memoryOffset = 0x952144;
 				break;
+			case 16756736: //higan (v105tr1)
+				memoryOffset = 0x94F144;
+				break;
 			default:
 				memoryOffset = 1;
 				break;
