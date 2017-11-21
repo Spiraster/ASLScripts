@@ -66,23 +66,18 @@ startup
                     print("[Autosplitter] Scanning memory");
                     var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
 
+                    var ptrOffset = IntPtr.Zero;
                     foreach (var page in proc.MemoryPages())
                     {
                         var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-                        var ptrOffset = scanner.Scan(target);
 
-                        if (ptrOffset != IntPtr.Zero)
-                        {
-                            vars.ptrOffset = ptrOffset;
+                        if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
                             break;
-                        }
                     }
-
-                    if (vars.ptrOffset != IntPtr.Zero)
-                    {
-                        vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x28);
-                        vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
-                    }
+                    
+                    vars.ptrOffset = ptrOffset;
+                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x28);
+                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
                 }
             }
             else if (baseOffset != 0) //bgb
@@ -90,12 +85,8 @@ startup
                 if (vars.ptrOffset == IntPtr.Zero)
                 {
                     vars.ptrOffset = proc.ReadPointer(proc.ReadPointer((IntPtr)baseOffset) + 0x34);
-
-                    if (vars.ptrOffset != IntPtr.Zero)
-                    {
-                        vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset + 0x10);
-                        vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
-                    }
+                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset + 0x10);
+                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
                 }
 
                 vars.wramOffset += 0xC000;
@@ -209,13 +200,12 @@ update
 {
     if (vars.stopwatch.ElapsedMilliseconds > 1500)
     {
-        if (vars.romOffset == IntPtr.Zero || vars.wramOffset == IntPtr.Zero)
-            vars.FindOffsets(game, modules.First().ModuleMemorySize);
+        vars.FindOffsets(game, modules.First().ModuleMemorySize);
 
         if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
         {
             vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x14A);
-            vars.watchers = vars.GetWatcherList((IntPtr)vars.wramOffset, vars.version);
+            vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.version);
             vars.stopwatch.Reset();
         }
         else
@@ -234,7 +224,7 @@ update
     {
         vars.FindOffsets(game, modules.First().ModuleMemorySize);
         vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x14A);
-        vars.watchers = vars.GetWatcherList((IntPtr)vars.wramOffset, vars.version);
+        vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.version);
     }
 
     vars.watchers.UpdateAll(game);

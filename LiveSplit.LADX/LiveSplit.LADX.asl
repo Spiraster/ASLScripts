@@ -63,36 +63,87 @@ startup
 
     vars.timer_OnStart = (EventHandler)((s, e) =>
     {
-        vars.splits = vars.GetSplitList(vars.musicMode.Current);
+        vars.splits = vars.GetSplitList(vars.version);
     });
     timer.OnStart += vars.timer_OnStart;
 
-    vars.wramTarget = new SigScanTarget(-0x20, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00"); //gambatte
-
-    vars.FindWRAM = (Func<Process, int, IntPtr>)((proc, ptr) => 
+    vars.FindOffsets = (Action<Process, int>)((proc, memorySize) => 
     {
-        if (ptr != 0) //bgb
-            return proc.ReadPointer(proc.ReadPointer(proc.ReadPointer((IntPtr)ptr) + 0x34) + 0xC0) + 0xC000;
-        else //gambatte
+        var baseOffset = 0;
+        switch (memorySize)
         {
-            print("[Autosplitter] Scanning memory");
-            var wramPtr = IntPtr.Zero;
+            case 1691648: //bgb (1.5.1)
+                baseOffset = 0x55BC7C;
+                break;
+            case 1699840: //bgb (1.5.2)
+                baseOffset = 0x55DCA0;
+                break;
+            case 1736704: //bgb (1.5.3/1.5.4)
+                baseOffset = 0x564EBC;
+                break;
+            case 14290944: //gambatte-speedrun (r600)
+            case 14180352: //gambatte-speedrun (r604/r614)
+                baseOffset = int.MaxValue;
+                break;
+        }
 
-            foreach (var page in proc.MemoryPages())
+        if (baseOffset == 0)
+        {
+            vars.romOffset = (IntPtr)1;
+            vars.wramOffset = (IntPtr)1;            
+        }
+        else
+        {
+            vars.romOffset = IntPtr.Zero;
+            vars.wramOffset = IntPtr.Zero;
+
+            if (baseOffset == int.MaxValue) //gambatte
             {
-                var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+                if (vars.ptrOffset == IntPtr.Zero)
+                {
+                    print("[Autosplitter] Scanning memory");
+                    var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
 
-                if (wramPtr == IntPtr.Zero)
-                    wramPtr = scanner.Scan(vars.wramTarget);
+                    var ptrOffset = IntPtr.Zero;
+                    foreach (var page in proc.MemoryPages())
+                    {
+                        var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
 
-                if (wramPtr != IntPtr.Zero)
-                    break;
+                        if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
+                            break;
+                    }
+
+                    vars.ptrOffset  = ptrOffset;
+                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x28);
+                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
+                }
+            }
+            else if (baseOffset != 0) //bgb
+            {
+                if (vars.ptrOffset == IntPtr.Zero)
+                {
+                    vars.ptrOffset = proc.ReadPointer(proc.ReadPointer((IntPtr)baseOffset) + 0x34);
+                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset + 0x10);
+                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
+                }
+
+                vars.wramOffset += 0xC000;
+            }
+            
+            if (vars.ptrOffset != IntPtr.Zero)
+            {
+                vars.romPtr.Update(proc);
+                vars.romOffset += vars.romPtr.Current;
+                
+                vars.wramPtr.Update(proc);
+                vars.wramOffset += vars.wramPtr.Current;
             }
 
-            if (wramPtr != IntPtr.Zero)
-                return proc.ReadPointer(wramPtr);
-            else
-                return IntPtr.Zero;
+            if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
+            {
+                print("[Autosplitter] ROM: " + vars.romOffset.ToString("X8"));
+                print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
+            }
         }
     });
 
@@ -117,14 +168,6 @@ startup
             new MemoryWatcher<byte>(wramOffset + 0x19B5) { Name = "d6InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1A2C) { Name = "d7InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1A30) { Name = "d8InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B65) { Name = "d1Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B66) { Name = "d2Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B67) { Name = "d3Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B68) { Name = "d4Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B69) { Name = "d5Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B6A) { Name = "d6Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B6B) { Name = "d7Instrument" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B6C) { Name = "d8Instrument" },
             new MemoryWatcher<byte>(wramOffset + 0x1800) { Name = "d8Mountaintop" },
             new MemoryWatcher<byte>(wramOffset + 0x1B54) { Name = "overworldTile" },
             new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "dungeonTile" },
@@ -154,7 +197,7 @@ startup
         };
     });
 
-    vars.GetSplitList = (Func<int, List<Tuple<string, List<Tuple<string, int>>>>>)((flag) =>
+    vars.GetSplitList = (Func<int, List<Tuple<string, List<Tuple<string, int>>>>>)((version) =>
     {
         var list = new List<Tuple<string, List<Tuple<string, int>>>>
         {
@@ -166,8 +209,12 @@ startup
             Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("d6EntranceRoom", 0x8B) }),
             Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("d7EntranceRoom", 0x8B) }),
             Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
-            Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0x90), Tuple.Create("tailKey", 0x01) }),
-            Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
+            Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
+            Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldTile", 0x77) }),
+            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0201) }),
+            Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
+            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xCE) }),
+            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x0A) }),
             Tuple.Create("feather", new List<Tuple<string, int>> { Tuple.Create("featherRoom", 0x98) }),
             Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
             Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
@@ -175,21 +222,20 @@ startup
             Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
             Tuple.Create("l2Shield", new List<Tuple<string, int>> { Tuple.Create("l2ShieldRoom", 0x9E) }),
             Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
-            Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
-            Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("music2", 0x2A) }),
-            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x2A) }),
-            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xD4) }),
-            Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
-            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xCE) }),
-            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x0A) }),
             Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xE9) }),
             Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
             Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
-            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0201) }),
+            Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0x90), Tuple.Create("tailKey", 0x01) }),
+            Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
+            Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
+            Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
+            Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("music2", 0x2A) }),
+            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x2A) }),
+            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xD4) }),
             Tuple.Create("creditsWarp", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0301) }),
         };
 
-        if (flag == 0xD4 || flag == 0xC5) //LA
+        if (version == 0) //LA
         {
             print("[Autosplitter] LA");
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
@@ -202,10 +248,9 @@ startup
                 Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
                 Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
                 Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
-                Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
             });
         }
-        else if (flag == 0xD9 || flag == 0xCA) //LADX
+        else if (version == 0x80) //LADX
         {
             print("[Autosplitter] LADX");
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
@@ -218,8 +263,6 @@ startup
                 Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
                 Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
                 Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x10) }),
-                Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
-                Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldTile", 0x77) }),
             });
         }
 
@@ -229,10 +272,14 @@ startup
 
 init
 {
-    vars.memorySize = modules.First().ModuleMemorySize;
-
+    vars.ptrOffset = IntPtr.Zero;
+    vars.romOffset = IntPtr.Zero;
     vars.wramOffset = IntPtr.Zero;
-    vars.musicMode = new MemoryWatcher<byte>(IntPtr.Zero);
+
+    vars.romPtr = new MemoryWatcher<byte>(IntPtr.Zero);
+    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
+
+    vars.version = 0xFF;
     vars.watchers = new MemoryWatcherList();
     vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
 
@@ -243,32 +290,12 @@ update
 {
 	if (vars.stopwatch.ElapsedMilliseconds > 1500)
 	{
-        switch ((int)vars.memorySize)
-        {
-            case 1691648: //bgb (1.5.1)
-                vars.wramOffset = vars.FindWRAM(game, 0x55BC7C);
-                break;
-            case 1699840: //bgb (1.5.2)
-                vars.wramOffset = vars.FindWRAM(game, 0x55DCA0);
-                break;
-            case 1736704: //bgb (1.5.3/1.5.4)
-                vars.wramOffset = vars.FindWRAM(game, 0x564EBC);
-                break;
-            case 14290944: //gambatte-speedrun (r600)
-            case 14180352: //gambatte-speedrun (r604)
-                vars.wramOffset = vars.FindWRAM(game, 0);
-                break;
-            default:
-                vars.wramOffset = (IntPtr)1;
-                break;
-        }
+        vars.FindOffsets(game, modules.First().ModuleMemorySize);
 
-        if (vars.wramOffset != IntPtr.Zero)
+        if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
         {
-            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
+            vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
             vars.watchers = vars.GetWatcherList(vars.wramOffset);
-            vars.musicMode = new MemoryWatcher<byte>(vars.wramOffset + 0x1301);
-
             vars.stopwatch.Reset();
         }
         else
@@ -279,8 +306,17 @@ update
 	}
     else if (vars.watchers.Count == 0)
         return false;
+
+    vars.romPtr.Update(game);
+    vars.wramPtr.Update(game);
+
+    if (vars.romPtr.Changed || vars.wramPtr.Changed)
+    {
+        vars.FindOffsets(game, modules.First().ModuleMemorySize);
+        vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
+        vars.watchers = vars.GetWatcherList(vars.wramOffset);
+    }
     
-    vars.musicMode.Update(game);
     vars.watchers.UpdateAll(game);
 }
 

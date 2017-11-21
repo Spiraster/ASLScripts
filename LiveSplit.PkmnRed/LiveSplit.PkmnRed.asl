@@ -36,28 +36,38 @@ startup
     });
     timer.OnStart += vars.timer_OnStart;
 
-    vars.ramTarget = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-
-    vars.FindRAM = (Func<Process, Tuple<IntPtr, IntPtr>>)((proc) => 
+    vars.FindOffsets = (Action<Process>)((proc) => 
     {
-        print("[Autosplitter] Scanning memory");
-        var ramPtr = IntPtr.Zero;
-
-        foreach (var page in proc.MemoryPages())
+        if (vars.ptrOffset == IntPtr.Zero)
         {
-            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            print("[Autosplitter] Scanning memory");
+            var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
 
-            if (ramPtr == IntPtr.Zero)
-                ramPtr = scanner.Scan(vars.ramTarget);
-            
-            if (ramPtr != IntPtr.Zero)
-                break;
+            var ptrOffset = IntPtr.Zero;
+            foreach (var page in proc.MemoryPages())
+            {
+                var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+
+                if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
+                    break;
+            }
+
+            vars.ptrOffset = ptrOffset;
+            vars.hramOffset = vars.ptrOffset + 0x1E0;
+            vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
         }
 
-        if (ramPtr != IntPtr.Zero)
-            return Tuple.Create(proc.ReadPointer(ramPtr - 0x20), ramPtr + 0x1E0); //(WRAM, HRAM)
-        else
-            return Tuple.Create(IntPtr.Zero, IntPtr.Zero);
+        if (vars.ptrOffset != IntPtr.Zero)
+        {
+            vars.wramPtr.Update(proc);
+            vars.wramOffset = (IntPtr)vars.wramPtr.Current;
+        }
+
+        if (vars.wramOffset != IntPtr.Zero && vars.hramOffset != IntPtr.Zero)
+        {
+            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
+            print("[Autosplitter] HRAM: " + vars.hramOffset.ToString("X8"));
+        }
     });
 
     vars.GetWatcherList = (Func<IntPtr, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset) =>
@@ -116,10 +126,12 @@ startup
 
 init
 {
-    vars.memorySize = modules.First().ModuleMemorySize;
-
+    vars.ptrOffset = IntPtr.Zero;
     vars.wramOffset = IntPtr.Zero;
     vars.hramOffset = IntPtr.Zero;
+    
+    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
+
     vars.watchers = new MemoryWatcherList();
     vars.splits = new List<Tuple<string, List<Tuple<string, uint>>>>();
 
@@ -130,13 +142,10 @@ update
 {
     if (vars.stopwatch.ElapsedMilliseconds > 1500)
     {
-        var scan = vars.FindRAM(game);        
-        vars.wramOffset = scan.Item1;
-        vars.hramOffset = scan.Item2;
+        vars.FindOffsets(game);
 
-        if (vars.wramOffset != IntPtr.Zero)
+        if (vars.wramOffset != IntPtr.Zero && vars.hramOffset != IntPtr.Zero)
         {
-            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8") + ", HRAM: " + vars.hramOffset.ToString("X8"));
             vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.hramOffset);
             vars.stopwatch.Reset();
         }
@@ -148,6 +157,14 @@ update
     }
     else if (vars.watchers.Count == 0)
         return false;
+
+    vars.wramPtr.Update(game);
+
+    if (vars.wramPtr.Changed)
+    {
+        vars.FindOffsets(game);
+        vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.hramOffset);
+    }
 
     vars.watchers.UpdateAll(game);
 }

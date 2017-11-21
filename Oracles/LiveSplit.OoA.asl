@@ -66,32 +66,71 @@ startup
     });
     timer.OnStart += vars.timer_OnStart;
 
-    vars.wramTarget = new SigScanTarget(-0x20, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00"); //gambatte
-
-    vars.FindWRAM = (Func<Process, int, IntPtr>)((proc, ptr) => 
+    vars.FindOffsets = (Action<Process, int>)((proc, memorySize) => 
     {
-        if (ptr != 0) //bgb
-            return proc.ReadPointer(proc.ReadPointer(proc.ReadPointer((IntPtr)ptr) + 0x34) + 0xC0) + 0xC000;
-        else //gambatte
+        var baseOffset = 0;
+        switch (memorySize)
         {
-            print("[Autosplitter] Scanning memory");
-            var wramPtr = IntPtr.Zero;
+            case 1691648: //bgb (1.5.1)
+                baseOffset = 0x55BC7C;
+                break;
+            case 1699840: //bgb (1.5.2)
+                baseOffset = 0x55DCA0;
+                break;
+            case 1736704: //bgb (1.5.3/1.5.4)
+                baseOffset = 0x564EBC;
+                break;
+            case 14290944: //gambatte-speedrun (r600)
+            case 14180352: //gambatte-speedrun (r604/r614)
+                baseOffset = int.MaxValue;
+                break;
+        }
 
-            foreach (var page in proc.MemoryPages())
+        if (baseOffset == 0)
+            vars.wramOffset = (IntPtr)1;
+        else
+        {
+            vars.wramOffset = IntPtr.Zero;
+
+            if (baseOffset == int.MaxValue) //gambatte
             {
-                var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+                if (vars.ptrOffset == IntPtr.Zero)
+                {
+                    print("[Autosplitter] Scanning memory");
+                    var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
 
-                if (wramPtr == IntPtr.Zero)
-                    wramPtr = scanner.Scan(vars.wramTarget);
+                    var ptrOffset = IntPtr.Zero;
+                    foreach (var page in proc.MemoryPages())
+                    {
+                        var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
 
-                if (wramPtr != IntPtr.Zero)
-                    break;
+                        if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
+                            break;
+                    }
+
+                    vars.ptrOffset = ptrOffset;
+                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
+                }
+            }
+            else if (baseOffset != 0) //bgb
+            {
+                if (vars.ptrOffset == IntPtr.Zero)
+                {
+                    vars.ptrOffset = proc.ReadPointer(proc.ReadPointer((IntPtr)baseOffset) + 0x34);
+                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
+                }
+
+                vars.wramOffset += 0xC000;
+            }
+            
+            if (vars.ptrOffset != IntPtr.Zero)
+            {
+                vars.wramPtr.Update(proc);
+                vars.wramOffset += vars.wramPtr.Current;
             }
 
-            if (wramPtr != IntPtr.Zero)
-                return proc.ReadPointer(wramPtr);
-            else
-                return IntPtr.Zero;
+            if (vars.wramOffset != IntPtr.Zero)
+                print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
         }
     });
 
@@ -179,9 +218,11 @@ startup
 
 init
 {    
-    vars.memorySize = modules.First().ModuleMemorySize;
-
+    vars.ptrOffset = IntPtr.Zero;
     vars.wramOffset = IntPtr.Zero;
+
+    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
+
     vars.watchers = new MemoryWatcherList();
     vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
 
@@ -192,29 +233,10 @@ update
 {
     if (vars.stopwatch.ElapsedMilliseconds > 1500)
     {
-        switch ((int)vars.memorySize)
-        {
-            case 1691648: //bgb (1.5.1)
-                vars.wramOffset = vars.FindWRAM(game, 0x55BC7C);
-                break;
-            case 1699840: //bgb (1.5.2)
-                vars.wramOffset = vars.FindWRAM(game, 0x55DCA0);
-                break;
-            case 1736704: //bgb (1.5.3/1.5.4)
-                vars.wramOffset = vars.FindWRAM(game, 0x564EBC);
-                break;
-            case 14290944: //gambatte-speedrun (r600)
-            case 14180352: //gambatte-speedrun (r604)
-                vars.wramOffset = vars.FindWRAM(game, 0);
-                break;
-            default:
-                vars.wramOffset = (IntPtr)1;
-                break;
-        }
+        vars.FindOffsets(game, modules.First().ModuleMemorySize);
 
         if (vars.wramOffset != IntPtr.Zero)
         {
-            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
             vars.watchers = vars.GetWatcherList(vars.wramOffset);
             vars.stopwatch.Reset();
         }
@@ -226,6 +248,14 @@ update
     }
     else if (vars.watchers.Count == 0)
         return false;
+
+    vars.wramPtr.Update(game);
+
+    if (vars.wramPtr.Changed)
+    {
+        vars.FindOffsets(game, modules.First().ModuleMemorySize);
+        vars.watchers = vars.GetWatcherList(vars.wramOffset);
+    }
 
     vars.watchers.UpdateAll(game);
 }
