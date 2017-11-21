@@ -17,17 +17,23 @@ init
 	{
 		switch (modules.First().ModuleMemorySize)
 		{
-			case 5914624: //snes9x (1.53_x86)
+			case 5914624: //snes9x (1.53)
 				memoryOffset = memory.ReadValue<int>((IntPtr)0x6EFBA4);
 				break;
-			case 6909952: //snes9x (1.53_x64)
+			case 6909952: //snes9x (1.53-x64)
 				memoryOffset = memory.ReadValue<int>((IntPtr)0x140405EC8);
 				break;
-			case 6447104: //snes9x (1.54.1_x86)
+			case 6447104: //snes9x (1.54.1)
 				memoryOffset = memory.ReadValue<int>((IntPtr)0x7410D4);
 				break;
-			case 7946240: //snes9x (1.54.1_x64)
+			case 7946240: //snes9x (1.54.1-x64)
 				memoryOffset = memory.ReadValue<int>((IntPtr)0x1404DAF18);
+				break;
+			case 6602752: //snes9x (1.55)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x762874);
+				break;
+			case 8355840: //snes9x (1.55-x64)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x1405BFDB8);
 				break;
 			case 12509184: //higan (v102)
 				memoryOffset = 0x915304;
@@ -40,6 +46,9 @@ init
 				break;
 			case 16756736: //higan (v105tr1)
 				memoryOffset = 0x94F144;
+				break;
+			case 16019456: //higan (v106)
+				memoryOffset = 0x94D144;
 				break;
 			default:
 				memoryOffset = 1;
