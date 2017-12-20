@@ -3,8 +3,7 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 
 ### Supported emulators:
 - higan v102+
-- Snes9x 1.54.1
-- Snes9x 1.53
+- Snes9x 1.53+
 
 ## Features
 - Automatically start the timer when you select a file
