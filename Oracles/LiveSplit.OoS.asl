@@ -61,6 +61,9 @@ startup
             case 1736704: //bgb (1.5.3/1.5.4)
                 baseOffset = 0x564EBC;
                 break;
+            case 1740800: //bgb (1.5.5/1.5.6)
+                baseOffset = 0x566EDC;
+                break;
             case 14290944: //gambatte-speedrun (r600)
             case 14180352: //gambatte-speedrun (r604/r614)
                 baseOffset = int.MaxValue;
