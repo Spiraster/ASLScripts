@@ -96,8 +96,8 @@ split
 	var swordUp = vars.watchers["linkState"].Changed && vars.watchers["linkState"].Current == 0x24;
 
 	var escape = settings["escape"] && vars.watchers["yPos"].Current > vars.watchers["yPos"].Old && vars.watchers["yPos"].Current == 0x0218 && vars.watchers["mapTile"].Current == 0x36; //old.yPos == 0x01 && current.yPos == 0x02 && current.world == 0x0A && current.mapTile == 0x36;
-	var pendant = settings["pendants"] && swordUp && (vars.lastItem == 0x37 || vars.lastItem == 0x39 || vars.lastItem == 0x38);
-	var crystal = settings["crystals"] && swordUp && vars.lastItem == 0x20;
+	var pendant = settings["pendants"] && swordUp && vars.watchers["world"].Current == 0x0A && (vars.lastItem == 0x37 || vars.lastItem == 0x39 || vars.lastItem == 0x38);
+	var crystal = settings["crystals"] && swordUp && vars.watchers["world"].Current == 0x0A && vars.lastItem == 0x20;
 	var masterSword = settings["masterSword"] && vars.watchers["linkState"].Changed && vars.watchers["linkState"].Current == 0x17 && vars.watchers["world"].Current == 0x01;
 	var agahnim1 = settings["agahnim1"] && swordUp && vars.watchers["mapTile"].Current == 0x60;
 	var agahnim2 = settings["agahnim2"] && vars.watchers["linkState"].Old == 0x1D && vars.watchers["linkState"].Current == 0 && vars.watchers["mapTile"].Current == 0x27;
