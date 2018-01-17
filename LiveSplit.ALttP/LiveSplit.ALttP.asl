@@ -20,6 +20,12 @@ init
 	{
 		switch (modules.First().ModuleMemorySize)
 		{
+			case 10330112: //snes9x (1.52-rr)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x789414);
+				break;
+			case 7729152: //snes9x (1.54-rr)
+				memoryOffset = memory.ReadValue<int>((IntPtr)0x890EE4);
+				break;
 			case 5914624: //snes9x (1.53)
 				memoryOffset = memory.ReadValue<int>((IntPtr)0x6EFBA4);
 				break;
