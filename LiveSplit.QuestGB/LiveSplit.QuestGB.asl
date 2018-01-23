@@ -144,7 +144,7 @@ startup
         {
             return new List<Tuple<string, List<Tuple<string, int>>>>
             {
-                Tuple.Create("Tim", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xE2F8), Tuple.Create("EnemyActive", 0) }),
+                Tuple.Create("Tim", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xE258), Tuple.Create("EnemyActive", 0) }),
                 Tuple.Create("Solvaring", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x845A), Tuple.Create("EnemyActive", 0) }),
                 Tuple.Create("Kiliac", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x0859), Tuple.Create("EnemyActive", 0) }),
                 Tuple.Create("Dragon1", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x2E59), Tuple.Create("EnemyActive", 0) }),
