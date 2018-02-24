@@ -107,7 +107,7 @@ split
 	var switchPalaceExit = yellowPalace || greenPalace || bluePalace || redPalace;
 
 	var levelDoorPipe = settings["levelDoorPipe"] && ((vars.watchers["roomCounter"].Old + 1) == vars.watchers["roomCounter"].Current) && (vars.watchers["yoshiBanned"].Current == 0);
-	var castleDoorPipe = settings["castleDoorPipe"] && ((vars.watchers["roomCounter"].Old + 1) < vars.watchers["roomCounter"].Current) && (vars.watchers["yoshiBanned"].Current == 1);
+	var castleDoorPipe = settings["castleDoorPipe"] && ((vars.watchers["roomCounter"].Old + 1) == vars.watchers["roomCounter"].Current) && (vars.watchers["yoshiBanned"].Current == 1);
 	
 	var bossExit = settings["bosses"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1 && vars.watchers["bossDefeat"].Current == 1;
 	var bowserDefeated = settings["bosses"] && vars.watchers["peach"].Old == 0 && vars.watchers["peach"].Current == 1;
