@@ -10,6 +10,10 @@ startup
 	settings.SetToolTip("bosses", "Split on boss fanfare");
 	settings.Add("switchPalaces", false, "Switch Palaces");
 	settings.SetToolTip("switchPalaces", "Split on completing a switch palace");
+	settings.Add("levelDoorPipe", false, "Level Room Transitions");
+	settings.SetToolTip("levelDoorPipe", "Split on door and pipe transitions within standard levels and switch palaces");
+	settings.Add("castleDoorPipe", false, "Castle/GH Room Transitions");
+	settings.SetToolTip("castleDoorPipe", "Split on door and pipe transitions within ghost houses and castles");
 }
 
 init
@@ -67,6 +71,8 @@ init
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1f27) { Name = "greenSwitch" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1f29) { Name = "blueSwitch" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1f2a) { Name = "redSwitch" },
+		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x141A) { Name = "roomCounter" },
+		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1B9B) { Name = "yoshiBanned" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x13C6) { Name = "bossDefeat" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x190D) { Name = "peach" },
 	};
@@ -91,13 +97,18 @@ split
 {
 	var goalExit = settings["levels"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1 && vars.watchers["bossDefeat"].Current == 0;
 	var keyExit = settings["levels"] && vars.watchers["keyholeTimer"].Old == 0 && vars.watchers["keyholeTimer"].Current == 0x0030;
+	
 	var yellowPalace = settings["switchPalaces"] && vars.watchers["yellowSwitch"].Old == 0 && vars.watchers["yellowSwitch"].Current == 1;
 	var greenPalace = settings["switchPalaces"] && vars.watchers["greenSwitch"].Old == 0 && vars.watchers["greenSwitch"].Current == 1;
 	var bluePalace = settings["switchPalaces"] && vars.watchers["blueSwitch"].Old == 0 && vars.watchers["blueSwitch"].Current == 1;
 	var redPalace = settings["switchPalaces"] && vars.watchers["redSwitch"].Old == 0 && vars.watchers["redSwitch"].Current == 1;
 	var switchPalaceExit = yellowPalace || greenPalace || bluePalace || redPalace;
+
+	var levelDoorPipe = settings["levelDoorPipe"] && (vars.watchers["roomCounter"].Old + 1) == vars.watchers["roomCounter"].Current && vars.watchers["yoshiBanned"].Current == 0;
+	var castleDoorPipe = settings["castleDoorPipe"] && (vars.watchers["roomCounter"].Old + 1) == vars.watchers["roomCounter"].Current && vars.watchers["yoshiBanned"].Current == 1;
+	
 	var bossExit = settings["bosses"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1 && vars.watchers["bossDefeat"].Current == 1;
 	var bowserDefeated = settings["bosses"] && vars.watchers["peach"].Old == 0 && vars.watchers["peach"].Current == 1;
 
-	return goalExit || keyExit || switchPalaceExit || bossExit || bowserDefeated;
+	return goalExit || keyExit || switchPalaceExit || levelDoorPipe || castleDoorPipe || bossExit || bowserDefeated;
 }
