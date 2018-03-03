@@ -266,6 +266,7 @@ startup
                 Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
                 Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
                 Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x10) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x00) }),
             });
         }
 
