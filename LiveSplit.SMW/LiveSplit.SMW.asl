@@ -14,6 +14,8 @@ startup
 	settings.SetToolTip("levelDoorPipe", "Split on door and pipe transitions within standard levels and switch palaces");
 	settings.Add("castleDoorPipe", false, "Castle/GH Room Transitions");
 	settings.SetToolTip("castleDoorPipe", "Split on door and pipe transitions within ghost houses and castles");
+	settings.Add("bowserPhase", false, "Bowser Phase Transition");
+	settings.SetToolTip("bowserPhase", "Split on the transition between Bowser's phases (not tested on Cloud runs)");
 }
 
 init
@@ -74,6 +76,7 @@ init
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x141A) { Name = "roomCounter" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1B9B) { Name = "yoshiBanned" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x13C6) { Name = "bossDefeat" },
+		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1429) { Name = "bowserPalette" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x190D) { Name = "peach" },
 	};
 }
@@ -108,7 +111,8 @@ split
 	var castleDoorPipe = settings["castleDoorPipe"] && (vars.watchers["roomCounter"].Old + 1) == vars.watchers["roomCounter"].Current && vars.watchers["yoshiBanned"].Current == 1;
 	
 	var bossExit = settings["bosses"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1 && vars.watchers["bossDefeat"].Current == 1;
+	var bowserPhase = settings["bowserPhase"] && vars.watchers["bowserPalette"].Old == 4 && vars.watchers["bowserPalette"].Current == 7;
 	var bowserDefeated = settings["bosses"] && vars.watchers["peach"].Old == 0 && vars.watchers["peach"].Current == 1;
 
-	return goalExit || keyExit || switchPalaceExit || levelDoorPipe || castleDoorPipe || bossExit || bowserDefeated;
+	return goalExit || keyExit || switchPalaceExit || levelDoorPipe || castleDoorPipe || bossExit || bowserPhase || bowserDefeated;
 }
