@@ -49,6 +49,7 @@ startup
     settings.Add("l2Sword", false, "Sword (L2)");
 
     settings.CurrentDefaultParent = "misc";
+    settings.Add("house", false, "Leave starting house");
     settings.Add("woods", false, "Leaving the Mysterious Woods");
     settings.Add("shop", false, "Shop Stealing");
     settings.Add("marin", false, "Marin");
@@ -228,6 +229,7 @@ startup
             Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xE9) }),
             Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
             Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
+            Tuple.Create("house", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0xA2) }),
             Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0x90), Tuple.Create("tailKey", 0x01) }),
             Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
             Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
