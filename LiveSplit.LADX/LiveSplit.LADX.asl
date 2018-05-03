@@ -5,10 +5,10 @@ state("gambatte_qt") {}
 startup
 {
     //-------------------------------------------------------------//
-    settings.Add("entrances", true, "Dungeon Entrance Splits");
-    settings.Add("instruments", true, "Dungeon End Splits (Instruments)");
-    settings.Add("items", true, "Item Splits");
-    settings.Add("misc", true, "Miscellaneous Splits");
+    settings.Add("entrances", true, "Dungeon Entrances");
+    settings.Add("instruments", true, "Dungeon Ends (Instruments)");
+    settings.Add("items", true, "Items");
+    settings.Add("misc", true, "Miscellaneous");
 
     settings.CurrentDefaultParent = "entrances";
     settings.Add("d1Enter", true, "Tail Cave (D1)");
@@ -34,29 +34,35 @@ startup
     settings.Add("eggStairs", true, "Wind Fish's Egg (stairs)");
 
     settings.CurrentDefaultParent = "items";
-    settings.Add("tailKey", true, "Tail Key");
+    settings.Add("tailKey", false, "Tail Key");
+    settings.Add("slimeKey", false, "Slime Key");
     settings.Add("anglerKey", false, "Angler Key");
-    settings.Add("birdKey", true, "Bird Key");
+    settings.Add("faceKey", false, "Face Key");
+    settings.Add("birdKey", false, "Bird Key");
     settings.Add("feather", false, "Feather");
     settings.Add("bracelet", false, "Bracelet (L1)");
     settings.Add("boots", false, "Boots");
     settings.Add("ocarina", false, "Ocarina");
     settings.Add("flippers", false, "Flippers");
+    settings.Add("hookshot", false, "Hookshot");
     settings.Add("l2Shield", false, "Shield (L2)");
     settings.Add("magicRod", false, "Magic Rod");
     settings.Add("magnifyingLens", false, "Magnifying Lens");
+    settings.Add("boomerang", false, "Boomerang");
     settings.Add("l1Sword", false, "Sword (L1)");
     settings.Add("l2Sword", false, "Sword (L2)");
+    settings.Add("yoshi", false, "Yoshi Doll");
 
     settings.CurrentDefaultParent = "misc";
     settings.Add("house", false, "Leave starting house");
     settings.Add("woods", false, "Leaving the Mysterious Woods");
-    settings.Add("shop", false, "Shop Stealing");
+    settings.Add("shop", false, "Shoplifting");
     settings.Add("marin", false, "Marin");
+    settings.Add("walrus", false, "Walrus");
     settings.Add("d8Exit", false, "Exit D8 to Mountaintop");
-    settings.Add("song1", false, "Ballad of the Wind Fish (Song 1)");
-    settings.Add("song2", false, "Manbo's Mambo (Song 2)");
-    settings.Add("song3", false, "Frog's Song of Soul (Song 3)");
+    settings.Add("song1", false, "Song #1 (Ballad of the Wind Fish)");
+    settings.Add("song2", false, "Song #2 (Manbo's Mambo)");
+    settings.Add("song3", false, "Song #3 (Frog's Song of Soul)");
     settings.Add("creditsWarp", false, "Credits Warp (ACE)");
     //-------------------------------------------------------------//
 
@@ -173,8 +179,9 @@ startup
             new MemoryWatcher<byte>(wramOffset + 0x1A2C) { Name = "d7InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1A30) { Name = "d8InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1800) { Name = "d8Mountaintop" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B54) { Name = "overworldTile" },
-            new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "dungeonTile" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B54) { Name = "overworldScreen" },
+            //new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "submapScreen" },
+            new MemoryWatcher<byte>(wramOffset + 0x13B0) { Name = "objectState" },
             new MemoryWatcher<byte>(wramOffset + 0x13CA) { Name = "music" },
             new MemoryWatcher<byte>(wramOffset + 0x13CB) { Name = "music2" },
             new MemoryWatcher<byte>(wramOffset + 0x13C8) { Name = "sound" },
@@ -186,18 +193,19 @@ startup
             new MemoryWatcher<byte>(wramOffset + 0x1B0C) { Name = "flippers" },
             new MemoryWatcher<byte>(wramOffset + 0x1A1A) { Name = "l2ShieldRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1A37) { Name = "magicRodRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B73) { Name = "marin" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B0E) { Name = "tradingItem" },
             new MemoryWatcher<byte>(wramOffset + 0x1B6E) { Name = "shopThefts" },
-
-            new MemoryWatcher<byte>(wramOffset + 0x1B0F) { Name = "seashells" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B5B) { Name = "hearts" },
-            new MemoryWatcher<short>(wramOffset + 0x1C0C) { Name = "photos" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B76) { Name = "maxPowder" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B77) { Name = "maxBombs" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B78) { Name = "maxArrows" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B73) { Name = "marin" },
 
             new MemoryWatcher<byte>(wramOffset + 0xEFF) { Name = "resetCheck" },
             new MemoryWatcher<short>(wramOffset + 0x1B95) { Name = "gameState" },
+
+            //new MemoryWatcher<byte>(wramOffset + 0x1B0F) { Name = "seashells" },
+            //new MemoryWatcher<byte>(wramOffset + 0x1B5B) { Name = "hearts" },
+            //new MemoryWatcher<short>(wramOffset + 0x1C0C) { Name = "photos" },
+            //new MemoryWatcher<byte>(wramOffset + 0x1B76) { Name = "maxPowder" },
+            //new MemoryWatcher<byte>(wramOffset + 0x1B77) { Name = "maxBombs" },
+            //new MemoryWatcher<byte>(wramOffset + 0x1B78) { Name = "maxArrows" },
         };
     });
 
@@ -214,30 +222,38 @@ startup
             Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("d7EntranceRoom", 0x8B) }),
             Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
             Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
-            Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldTile", 0x77) }),
+            Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldScreen", 0x77) }),
             Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0201) }),
+
             Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
-            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xCE) }),
-            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x0A) }),
+            Tuple.Create("slimeKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xC6) }),
+            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xCE) }),
+            Tuple.Create("faceKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xAC) }),
+            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0x0A) }),
             Tuple.Create("feather", new List<Tuple<string, int>> { Tuple.Create("featherRoom", 0x98) }),
             Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
             Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
             Tuple.Create("ocarina", new List<Tuple<string, int>> { Tuple.Create("ocarinaRoom", 0x90) }),
             Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
+            Tuple.Create("hookshot", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xD9) }),
             Tuple.Create("l2Shield", new List<Tuple<string, int>> { Tuple.Create("l2ShieldRoom", 0x9E) }),
             Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
-            Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xE9) }),
-            Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0xF2) }),
-            Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldTile", 0x8A) }),
-            Tuple.Create("house", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0xA2) }),
-            Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldTile", 0x90), Tuple.Create("tailKey", 0x01) }),
+            Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xE9) }),
+            Tuple.Create("boomerang", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xF5) }),
+            Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldScreen", 0xF2) }),
+            Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldScreen", 0x8A) }),
+            Tuple.Create("yoshi", new List<Tuple<string, int>> { Tuple.Create("tradingItem", 0x01) }),
+
+            Tuple.Create("house", new List<Tuple<string, int>> { Tuple.Create("overworldScreen", 0xA2) }),
+            Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldScreen", 0x90), Tuple.Create("tailKey", 0x01) }),
             Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
             Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
+            Tuple.Create("walrus", new List<Tuple<string, int>> { Tuple.Create("objectState", 0x05), Tuple.Create("overworldScreen", 0xFD) }),
             Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
             Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("music2", 0x2A) }),
-            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0x2A) }),
-            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldTile", 0xD4) }),
-            Tuple.Create("creditsWarp", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0301) }),
+            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0x2A) }),
+            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xD4) }),
+            Tuple.Create("creditsWarp", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0301) }),            
         };
 
         if (version == 0) //LA
@@ -260,15 +276,15 @@ startup
             print("[Autosplitter] LADX");
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
             {
-                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xD3) }),
-                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x24) }),
-                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xB5) }),
-                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x2B) }),
-                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0xD9) }),
-                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x8C) }),
-                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x0E) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x10) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldTile", 0x00) }),
+                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0xD3) }),
+                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x24) }),
+                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0xB5) }),
+                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x2B) }),
+                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0xD9) }),
+                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x8C) }),
+                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x0E) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x10) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x00) }),
             });
         }
 
