@@ -75,6 +75,7 @@ startup
         return new MemoryWatcherList
         {
             //WRAM
+            new MemoryWatcher<byte>(wramOffset + 0x0001) { Name = "soundID" },
             new MemoryWatcher<uint>(wramOffset + 0x03C9) { Name = "fileSelectTiles" },
             new MemoryWatcher<uint>(wramOffset + 0x0477) { Name = "resetTiles" },
             new MemoryWatcher<uint>(wramOffset + 0x0D40) { Name = "hofPlayerShown" },
@@ -84,8 +85,6 @@ startup
             new MemoryWatcher<byte>(wramOffset + 0x1163) { Name = "partyCount" },
             new MemoryWatcher<byte>(wramOffset + 0x135E) { Name = "mapIndex" },
             new MemoryWatcher<ushort>(wramOffset + 0x1361) { Name = "playerPos" },
-            new MemoryWatcher<byte>(wramOffset + 0x176C) { Name = "fluteFlag" },
-            new MemoryWatcher<byte>(wramOffset + 0x17E0) { Name = "hm02Flag" },
             new MemoryWatcher<ushort>(wramOffset + 0x1FD7) { Name = "hofFadeTimer" },
             new MemoryWatcher<ushort>(wramOffset + 0x1FFD) { Name = "state" },
 
@@ -102,8 +101,8 @@ startup
             Tuple.Create("enterMtMoon", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x3Bu), Tuple.Create("playerPos", 0x0E23u) }),
             Tuple.Create("exitMtMoon", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x0Fu), Tuple.Create("playerPos", 0x1805u) }),
             Tuple.Create("nuggetBridge", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x8A828E91), Tuple.Create("mapIndex", 0x23u), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("hm02", new List<Tuple<string, uint>> { Tuple.Create("hm02Flag", 0x40u) }),
-            Tuple.Create("flute", new List<Tuple<string, uint>> { Tuple.Create("fluteFlag", 1u) }),
+            Tuple.Create("hm02", new List<Tuple<string, uint>> { Tuple.Create("soundID", 0x94u), Tuple.Create("mapIndex", 0xBCu) }),
+            Tuple.Create("flute", new List<Tuple<string, uint>> { Tuple.Create("soundID", 0x94u), Tuple.Create("mapIndex", 0x95u) }),
             Tuple.Create("silphGiovanni", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x958E8886), Tuple.Create("mapIndex", 0xEBu), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
             Tuple.Create("exitVictoryRoad", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x22u), Tuple.Create("playerPos", 0x0E1Fu) }),
             Tuple.Create("gym1", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x828E9181), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
