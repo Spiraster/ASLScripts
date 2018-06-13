@@ -161,15 +161,6 @@ startup
     {
         return new MemoryWatcherList
         {
-            new MemoryWatcher<byte>(wramOffset + 0x1917) { Name = "d1EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1936) { Name = "d2EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1952) { Name = "d3EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x197A) { Name = "d4EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x19A1) { Name = "d5EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x19D4) { Name = "d6EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1A0E) { Name = "d7EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1A5D) { Name = "d8EntranceRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1DF2) { Name = "d0EntranceRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1902) { Name = "d1InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x192A) { Name = "d2InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1959) { Name = "d3InstrumentRoom" },
@@ -180,7 +171,8 @@ startup
             new MemoryWatcher<byte>(wramOffset + 0x1A30) { Name = "d8InstrumentRoom" },
             new MemoryWatcher<byte>(wramOffset + 0x1800) { Name = "d8Mountaintop" },
             new MemoryWatcher<byte>(wramOffset + 0x1B54) { Name = "overworldScreen" },
-            //new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "submapScreen" },
+            new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "submapScreen" },
+            new MemoryWatcher<byte>(wramOffset + 0x1B60) { Name = "submapIndex" },
             new MemoryWatcher<byte>(wramOffset + 0x13B0) { Name = "objectState" },
             new MemoryWatcher<byte>(wramOffset + 0x13CA) { Name = "music" },
             new MemoryWatcher<byte>(wramOffset + 0x13CB) { Name = "music2" },
@@ -200,12 +192,12 @@ startup
             new MemoryWatcher<byte>(wramOffset + 0xEFF) { Name = "resetCheck" },
             new MemoryWatcher<short>(wramOffset + 0x1B95) { Name = "gameState" },
 
-            //new MemoryWatcher<byte>(wramOffset + 0x1B0F) { Name = "seashells" },
-            //new MemoryWatcher<byte>(wramOffset + 0x1B5B) { Name = "hearts" },
-            //new MemoryWatcher<short>(wramOffset + 0x1C0C) { Name = "photos" },
-            //new MemoryWatcher<byte>(wramOffset + 0x1B76) { Name = "maxPowder" },
-            //new MemoryWatcher<byte>(wramOffset + 0x1B77) { Name = "maxBombs" },
-            //new MemoryWatcher<byte>(wramOffset + 0x1B78) { Name = "maxArrows" },
+            // new MemoryWatcher<byte>(wramOffset + 0x1B0F) { Name = "seashells" },
+            // new MemoryWatcher<byte>(wramOffset + 0x1B5B) { Name = "hearts" },
+            // new MemoryWatcher<short>(wramOffset + 0x1C0C) { Name = "photos" },
+            // new MemoryWatcher<byte>(wramOffset + 0x1B76) { Name = "maxPowder" },
+            // new MemoryWatcher<byte>(wramOffset + 0x1B77) { Name = "maxBombs" },
+            // new MemoryWatcher<byte>(wramOffset + 0x1B78) { Name = "maxArrows" },
         };
     });
 
@@ -213,15 +205,15 @@ startup
     {
         var list = new List<Tuple<string, List<Tuple<string, int>>>>
         {
-            Tuple.Create("d1Enter", new List<Tuple<string, int>> { Tuple.Create("d1EntranceRoom", 0x8E) }),
-            Tuple.Create("d2Enter", new List<Tuple<string, int>> { Tuple.Create("d2EntranceRoom", 0x8C) }),
-            Tuple.Create("d3Enter", new List<Tuple<string, int>> { Tuple.Create("d3EntranceRoom", 0x8D) }),
-            Tuple.Create("d4Enter", new List<Tuple<string, int>> { Tuple.Create("d4EntranceRoom", 0x8C) }),
-            Tuple.Create("d5Enter", new List<Tuple<string, int>> { Tuple.Create("d5EntranceRoom", 0x8A) }),
-            Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("d6EntranceRoom", 0x8B) }),
-            Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("d7EntranceRoom", 0x8B) }),
-            Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("d8EntranceRoom", 0x8C) }),
-            Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("d0EntranceRoom", 0x84) }),
+            Tuple.Create("d1Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x00), Tuple.Create("submapScreen", 0x3B) }),
+            Tuple.Create("d2Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x01) }), //Tuple.Create("submapScreen", 0x3A)
+            Tuple.Create("d3Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x02) }), //Tuple.Create("submapScreen", 0x39)
+            Tuple.Create("d4Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x03) }), //Tuple.Create("submapScreen", 0x3B)
+            Tuple.Create("d5Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x04) }), //Tuple.Create("submapScreen", 0x3F)
+            Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x05) }), //Tuple.Create("submapScreen", 0x3B)
+            Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x06) }), //Tuple.Create("submapScreen", 0x39)
+            Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x07) }), //Tuple.Create("submapScreen", 0x3B)
+            Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0xFF) }), //Tuple.Create("submapScreen", 0x3A)
             Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldScreen", 0x77) }),
             Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0201) }),
 
@@ -276,15 +268,14 @@ startup
             print("[Autosplitter] LADX");
             list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
             {
-                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0xD3) }),
-                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x24) }),
-                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0xB5) }),
-                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x2B) }),
-                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0xD9) }),
-                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x8C) }),
-                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x0E) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x10) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("overworldScreen", 0x00) }),
+                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x00) }),
+                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x01) }),
+                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x02) }),
+                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x03) }),
+                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x04) }),
+                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x05) }),
+                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x06) }),
+                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x07) }),
             });
         }
 
