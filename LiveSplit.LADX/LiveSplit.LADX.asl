@@ -68,12 +68,6 @@ startup
 
     vars.stopwatch = new Stopwatch();
 
-    vars.timer_OnStart = (EventHandler)((s, e) =>
-    {
-        vars.splits = vars.GetSplitList(vars.version);
-    });
-    timer.OnStart += vars.timer_OnStart;
-
     vars.FindOffsets = (Action<Process, int>)((proc, memorySize) => 
     {
         var baseOffset = 0;
@@ -157,129 +151,128 @@ startup
         }
     });
 
-    vars.GetWatcherList = (Func<IntPtr, MemoryWatcherList>)((wramOffset) =>
+    vars.Current = (Func<string, int, bool>)((name, value) => 
     {
+        return vars.watchers[name].Current == value;
+    });
+
+    vars.Changed = (Func<string, int, bool>)((name, value) => 
+    {
+        return vars.watchers[name].Changed && vars.watchers[name].Current == value;
+    });
+
+    vars.Bit = (Func<int, int, bool>)((value, bit) =>
+    {
+        return ((value >> bit) & 1) == 1;
+    });
+
+    vars.Instrument = (Func<int, bool>)((index) => 
+    {
+        var flags = vars.watchers["dungeonFlags"].Current;
+        var dungeon = BitConverter.GetBytes(flags)[index];
+        return vars.Bit(dungeon, 1);
+    });
+
+    vars.GetWatcherList = (Func<MemoryWatcherList>)(() =>
+    {
+        var wram = (IntPtr)vars.wramOffset;
         return new MemoryWatcherList
         {
-            new MemoryWatcher<byte>(wramOffset + 0x1902) { Name = "d1InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x192A) { Name = "d2InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1959) { Name = "d3InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1962) { Name = "d4InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1982) { Name = "d5InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x19B5) { Name = "d6InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1A2C) { Name = "d7InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1A30) { Name = "d8InstrumentRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1800) { Name = "d8Mountaintop" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B54) { Name = "overworldScreen" },
-            new MemoryWatcher<byte>(wramOffset + 0x1BAE) { Name = "submapScreen" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B60) { Name = "submapIndex" },
-            new MemoryWatcher<byte>(wramOffset + 0x13B0) { Name = "objectState" },
-            new MemoryWatcher<byte>(wramOffset + 0x13CA) { Name = "music" },
-            new MemoryWatcher<byte>(wramOffset + 0x13CB) { Name = "music2" },
-            new MemoryWatcher<byte>(wramOffset + 0x13C8) { Name = "sound" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B11) { Name = "tailKey" },
-            new MemoryWatcher<byte>(wramOffset + 0x191D) { Name = "featherRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1920) { Name = "braceletRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1946) { Name = "bootsRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1ABE) { Name = "ocarinaRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B0C) { Name = "flippers" },
-            new MemoryWatcher<byte>(wramOffset + 0x1A1A) { Name = "l2ShieldRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1A37) { Name = "magicRodRoom" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B0E) { Name = "tradingItem" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B6E) { Name = "shopThefts" },
-            new MemoryWatcher<byte>(wramOffset + 0x1B73) { Name = "marin" },
+            new MemoryWatcher<long>(wram + 0x1B65) { Name = "dungeonFlags" },
+            new MemoryWatcher<byte>(wram + 0x1B54) { Name = "overworldScreen" },
+            new MemoryWatcher<byte>(wram + 0x1BAE) { Name = "submapScreen" },
+            new MemoryWatcher<byte>(wram + 0x1B60) { Name = "submapIndex" },
+            new MemoryWatcher<byte>(wram + 0x13CA) { Name = "music" },
+            new MemoryWatcher<byte>(wram + 0x13C8) { Name = "sound" },
+            new MemoryWatcher<byte>(wram + 0x13B0) { Name = "objectState" },
+            new MemoryWatcher<byte>(wram + 0x1B11) { Name = "tailKey" },
+            new MemoryWatcher<byte>(wram + 0x191D) { Name = "featherRoom" },
+            new MemoryWatcher<byte>(wram + 0x1920) { Name = "braceletRoom" },
+            new MemoryWatcher<byte>(wram + 0x1946) { Name = "bootsRoom" },
+            new MemoryWatcher<byte>(wram + 0x1ABE) { Name = "ocarinaRoom" },
+            new MemoryWatcher<byte>(wram + 0x1B0C) { Name = "flippers" },
+            new MemoryWatcher<byte>(wram + 0x1B44) { Name = "shieldLevel" },
+            new MemoryWatcher<byte>(wram + 0x1A37) { Name = "magicRodRoom" },
+            new MemoryWatcher<byte>(wram + 0x1B0E) { Name = "tradingItem" },
+            new MemoryWatcher<byte>(wram + 0x1B6E) { Name = "shopThefts" },
+            new MemoryWatcher<byte>(wram + 0x1B73) { Name = "marin" },
 
-            new MemoryWatcher<byte>(wramOffset + 0xEFF) { Name = "resetCheck" },
-            new MemoryWatcher<short>(wramOffset + 0x1B95) { Name = "gameState" },
-
-            // new MemoryWatcher<byte>(wramOffset + 0x1B0F) { Name = "seashells" },
-            // new MemoryWatcher<byte>(wramOffset + 0x1B5B) { Name = "hearts" },
-            // new MemoryWatcher<short>(wramOffset + 0x1C0C) { Name = "photos" },
-            // new MemoryWatcher<byte>(wramOffset + 0x1B76) { Name = "maxPowder" },
-            // new MemoryWatcher<byte>(wramOffset + 0x1B77) { Name = "maxBombs" },
-            // new MemoryWatcher<byte>(wramOffset + 0x1B78) { Name = "maxArrows" },
+            new MemoryWatcher<byte>(wram + 0xEFF) { Name = "resetCheck" },
+            new MemoryWatcher<short>(wram + 0x1B95) { Name = "gameState" },
         };
     });
 
-    vars.GetSplitList = (Func<int, List<Tuple<string, List<Tuple<string, int>>>>>)((version) =>
+    vars.GetSplitList = (Func<Dictionary<string, bool>>)(() =>
     {
-        var list = new List<Tuple<string, List<Tuple<string, int>>>>
+        var splits = new Dictionary<string, bool>
         {
-            Tuple.Create("d1Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x00), Tuple.Create("submapScreen", 0x3B) }),
-            Tuple.Create("d2Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x01) }), //Tuple.Create("submapScreen", 0x3A)
-            Tuple.Create("d3Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x02) }), //Tuple.Create("submapScreen", 0x39)
-            Tuple.Create("d4Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x03) }), //Tuple.Create("submapScreen", 0x3B)
-            Tuple.Create("d5Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x04) }), //Tuple.Create("submapScreen", 0x3F)
-            Tuple.Create("d6Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x05) }), //Tuple.Create("submapScreen", 0x3B)
-            Tuple.Create("d7Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x06) }), //Tuple.Create("submapScreen", 0x39)
-            Tuple.Create("d8Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0x07) }), //Tuple.Create("submapScreen", 0x3B)
-            Tuple.Create("d0Enter", new List<Tuple<string, int>> { Tuple.Create("submapIndex", 0xFF) }), //Tuple.Create("submapScreen", 0x3A)
-            Tuple.Create("d0End", new List<Tuple<string, int>> { Tuple.Create("sound", 0x01), Tuple.Create("music", 0x0C), Tuple.Create("overworldScreen", 0x77) }),
-            Tuple.Create("eggStairs", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0201) }),
+            { "d1Enter", vars.Current("submapScreen", 0x3B) && vars.Current("overworldScreen", 0xD3) },
+            { "d2Enter", vars.Current("submapIndex", 0x01) && vars.Current("submapScreen", 0x3A) },
+            { "d3Enter", vars.Current("submapIndex", 0x02) && vars.Current("submapScreen", 0x39) },
+            { "d4Enter", vars.Current("submapIndex", 0x03) && vars.Current("submapScreen", 0x3B) },
+            { "d5Enter", vars.Current("submapIndex", 0x04) && vars.Current("submapScreen", 0x3F) },
+            { "d6Enter", vars.Current("submapIndex", 0x05) && vars.Current("submapScreen", 0x3B) },
+            { "d7Enter", vars.Current("submapIndex", 0x06) && vars.Current("submapScreen", 0x39) },
+            { "d8Enter", vars.Current("submapIndex", 0x07) && vars.Current("submapScreen", 0x3B) },
+            { "d0Enter", vars.Current("submapIndex", 0xFF) && vars.Current("submapScreen", 0x3A) },
+            { "d0End", vars.Current("sound", 0x01) && vars.Current("music", 0x0C) && vars.Current("overworldScreen", 0x77) },
+            { "eggStairs", vars.Current("gameState", 0x0201) },
+            
+            { "tailKey", vars.Changed("tailKey", 0x01) && vars.Current("overworldScreen", 0x41) },
+            { "slimeKey", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xC6) },
+            { "anglerKey", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xCE) },
+            { "faceKey", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xAC) },
+            { "birdKey", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0x0A) },
+            { "feather", vars.Changed("featherRoom", 0x98) && vars.Current("submapScreen", 0x20) },
+            { "bracelet", vars.Changed("braceletRoom", 0x91) && vars.Current("submapIndex", 0x01) },
+            { "boots", vars.Changed("bootsRoom", 0x9B) && vars.Current("submapIndex", 0x02) },
+            { "ocarina", vars.Changed("ocarinaRoom", 0x90) && vars.Current("submapIndex", 0x13) },
+            { "flippers", vars.Changed("flippers", 0x01) && vars.Current("submapIndex", 0x03) },
+            { "hookshot", vars.Current("music", 0x10) && vars.Current("submapIndex", 0x04) },
+            { "l2Shield", vars.Changed("shieldLevel", 0x02) && vars.Current("submapIndex", 0x06) },
+            { "magicRod", vars.Changed("magicRodRoom", 0x98) && vars.Current("submapIndex", 0x07) },
+            { "magnifyingLens", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xE9) },
+            { "boomerang", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xF4) },
+            { "l1Sword", vars.Current("music", 0x0F) && vars.Current("overworldScreen", 0xF2) },
+            { "l2Sword", vars.Current("music", 0x0F) && vars.Current("overworldScreen", 0x8A) },
+            { "yoshi", vars.Changed("tradingItem", 0x01) },
 
-            Tuple.Create("tailKey", new List<Tuple<string, int>> { Tuple.Create("tailKey", 0x01) }),
-            Tuple.Create("slimeKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xC6) }),
-            Tuple.Create("anglerKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xCE) }),
-            Tuple.Create("faceKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xAC) }),
-            Tuple.Create("birdKey", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0x0A) }),
-            Tuple.Create("feather", new List<Tuple<string, int>> { Tuple.Create("featherRoom", 0x98) }),
-            Tuple.Create("bracelet", new List<Tuple<string, int>> { Tuple.Create("braceletRoom", 0x91) }),
-            Tuple.Create("boots", new List<Tuple<string, int>> { Tuple.Create("bootsRoom", 0x9B) }),
-            Tuple.Create("ocarina", new List<Tuple<string, int>> { Tuple.Create("ocarinaRoom", 0x90) }),
-            Tuple.Create("flippers", new List<Tuple<string, int>> { Tuple.Create("flippers", 0x01) }),
-            Tuple.Create("hookshot", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xD9) }),
-            Tuple.Create("l2Shield", new List<Tuple<string, int>> { Tuple.Create("l2ShieldRoom", 0x9E) }),
-            Tuple.Create("magicRod", new List<Tuple<string, int>> { Tuple.Create("magicRodRoom", 0x98) }),
-            Tuple.Create("magnifyingLens", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xE9) }),
-            Tuple.Create("boomerang", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xF5) }),
-            Tuple.Create("l1Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldScreen", 0xF2) }),
-            Tuple.Create("l2Sword", new List<Tuple<string, int>> { Tuple.Create("music", 0x0F), Tuple.Create("overworldScreen", 0x8A) }),
-            Tuple.Create("yoshi", new List<Tuple<string, int>> { Tuple.Create("tradingItem", 0x01) }),
-
-            Tuple.Create("house", new List<Tuple<string, int>> { Tuple.Create("overworldScreen", 0xA2) }),
-            Tuple.Create("woods", new List<Tuple<string, int>> { Tuple.Create("overworldScreen", 0x90), Tuple.Create("tailKey", 0x01) }),
-            Tuple.Create("shop", new List<Tuple<string, int>> { Tuple.Create("shopThefts", 0x02) }),
-            Tuple.Create("marin", new List<Tuple<string, int>> { Tuple.Create("marin", 0x01) }),
-            Tuple.Create("walrus", new List<Tuple<string, int>> { Tuple.Create("objectState", 0x05), Tuple.Create("overworldScreen", 0xFD) }),
-            Tuple.Create("d8Exit", new List<Tuple<string, int>> { Tuple.Create("d8Mountaintop", 0x80) }),
-            Tuple.Create("song1", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("music2", 0x2A) }),
-            Tuple.Create("song2", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0x2A) }),
-            Tuple.Create("song3", new List<Tuple<string, int>> { Tuple.Create("music", 0x10), Tuple.Create("overworldScreen", 0xD4) }),
-            Tuple.Create("creditsWarp", new List<Tuple<string, int>> { Tuple.Create("gameState", 0x0301) }),            
+            { "house", vars.Current("overworldScreen", 0xA2) },
+            { "woods", vars.Current("overworldScreen", 0x90) && vars.Current("tailKey", 0x01) },
+            { "shop", vars.Changed("shopThefts", 0x02) && vars.Current("overworldScreen", 0x93) },
+            { "marin", vars.Changed("marin", 0x01) && vars.Current("overworldScreen", 0xF5) },
+            { "walrus", vars.Current("objectState", 0x05) && vars.Current("overworldScreen", 0xFD) },
+            { "d8Exit", vars.Current("submapScreen", 0x12) && vars.Current("overworldScreen", 0x00) },
+            { "song1", vars.Current("music", 0x10) && (vars.Current("overworldScreen", 0xDC) || vars.Current("overworldScreen", 0x92)) },
+            { "song2", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0x2A) },
+            { "song3", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xD4) },
+            { "creditsWarp", vars.Current("gameState", 0x0301) },
         };
 
-        if (version == 0) //LA
+        if (vars.version == 0) //LA
         {
-            print("[Autosplitter] LA");
-            list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
-            {
-                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d1InstrumentRoom", 0x90) }),
-                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d2InstrumentRoom", 0x90) }),
-                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d3InstrumentRoom", 0x90) }),
-                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d4InstrumentRoom", 0x90) }),
-                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d5InstrumentRoom", 0x90) }),
-                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x05), Tuple.Create("d6InstrumentRoom", 0x90) }),
-                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x06), Tuple.Create("d7InstrumentRoom", 0x98) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x06), Tuple.Create("d8InstrumentRoom", 0x98) }),
-            });
+            splits.Add("d1End", vars.Current("music", 0x05) && vars.Instrument(0));
+            splits.Add("d2End", vars.Current("music", 0x05) && vars.Instrument(1));
+            splits.Add("d3End", vars.Current("music", 0x05) && vars.Instrument(2));
+            splits.Add("d4End", vars.Current("music", 0x05) && vars.Instrument(3));
+            splits.Add("d5End", vars.Current("music", 0x05) && vars.Instrument(4));
+            splits.Add("d6End", vars.Current("music", 0x05) && vars.Instrument(5));
+            splits.Add("d7End", vars.Current("music", 0x06) && vars.Instrument(6));
+            splits.Add("d8End", vars.Current("music", 0x06) && vars.Instrument(7));
         }
-        else if (version == 0x80) //LADX
+        else if (vars.version == 0x80) //LADX
         {
-            print("[Autosplitter] LADX");
-            list.AddRange(new List<Tuple<string, List<Tuple<string, int>>>>
-            {
-                Tuple.Create("d1End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x00) }),
-                Tuple.Create("d2End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x01) }),
-                Tuple.Create("d3End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x02) }),
-                Tuple.Create("d4End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x03) }),
-                Tuple.Create("d5End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x04) }),
-                Tuple.Create("d6End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x05) }),
-                Tuple.Create("d7End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x06) }),
-                Tuple.Create("d8End", new List<Tuple<string, int>> { Tuple.Create("music", 0x0B), Tuple.Create("submapIndex", 0x07) }),
-            });
+            splits.Add("d1End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x00));
+            splits.Add("d2End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x01));
+            splits.Add("d3End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x02));
+            splits.Add("d4End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x03));
+            splits.Add("d5End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x04));
+            splits.Add("d6End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x05));
+            splits.Add("d7End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x06));
+            splits.Add("d8End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x07));
         }
 
-        return list;
+        return splits;
     });
 }
 
@@ -294,13 +287,16 @@ init
 
     vars.version = 0xFF;
     vars.watchers = new MemoryWatcherList();
-    vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
+    vars.pastSplits = new HashSet<string>();
 
     vars.stopwatch.Restart();
 }
 
 update
 {
+    if (timer.CurrentPhase == TimerPhase.NotRunning && vars.pastSplits.Count > 0)
+        vars.pastSplits.Clear();
+
 	if (vars.stopwatch.ElapsedMilliseconds > 1500)
 	{
         vars.FindOffsets(game, modules.First().ModuleMemorySize);
@@ -308,7 +304,12 @@ update
         if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
         {
             vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
-            vars.watchers = vars.GetWatcherList(vars.wramOffset);
+            if (vars.version == 0x00)
+                print("[Autosplitter] LA");
+            else if (vars.version == 0x80)
+                print("[Autosplitter] LADX");
+
+            vars.watchers = vars.GetWatcherList();
             vars.stopwatch.Reset();
         }
         else
@@ -327,7 +328,7 @@ update
     {
         vars.FindOffsets(game, modules.First().ModuleMemorySize);
         vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
-        vars.watchers = vars.GetWatcherList(vars.wramOffset);
+        vars.watchers = vars.GetWatcherList();
     }
     
     vars.watchers.UpdateAll(game);
@@ -345,28 +346,15 @@ reset
 
 split
 {
-    foreach (var _split in vars.splits)
-    {
-        if (settings[_split.Item1])
-        {
-            var count = 0;
-            foreach (var _condition in _split.Item2)
-            {
-                if (vars.watchers[_condition.Item1].Current == _condition.Item2)
-                    count++;
-            }
+    var splits = vars.GetSplitList();
 
-            if (count == _split.Item2.Count)
-            {
-                print("[Autosplitter] Split: " + _split.Item1);
-                vars.splits.Remove(_split);
-                return true;
-            }
+    foreach (var split in splits)
+    {
+        if (settings[split.Key] && split.Value && !vars.pastSplits.Contains(split.Key))
+        {
+            vars.pastSplits.Add(split.Key);
+            print("[Autosplitter] Split: " + split.Key);
+            return true;
         }
     }
-}
-
-shutdown
-{
-    timer.OnStart -= vars.timer_OnStart;
 }
