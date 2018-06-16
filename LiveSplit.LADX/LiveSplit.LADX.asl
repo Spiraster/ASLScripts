@@ -68,40 +68,26 @@ startup
 
     vars.stopwatch = new Stopwatch();
 
-    vars.FindOffsets = (Action<Process, int>)((proc, memorySize) => 
+    vars.TryFindOffsets = (Func<Process, int, bool>)((proc, memorySize) => 
     {
-        var baseOffset = 0;
-        switch (memorySize)
+        var states = new Dictionary<int, int>
         {
-            case 1691648: //bgb (1.5.1)
-                baseOffset = 0x55BC7C;
-                break;
-            case 1699840: //bgb (1.5.2)
-                baseOffset = 0x55DCA0;
-                break;
-            case 1736704: //bgb (1.5.3/1.5.4)
-                baseOffset = 0x564EBC;
-                break;
-            case 1740800: //bgb (1.5.5/1.5.6)
-                baseOffset = 0x566EDC;
-                break;
-            case 14290944: //gambatte-speedrun (r600)
-            case 14180352: //gambatte-speedrun (r604/r614)
-                baseOffset = int.MaxValue;
-                break;
-        }
+            { 1691648, 0x55BC7C }, //BGB 1.5.1
+            { 1699840, 0x55DCA0 }, //BGB 1.5.2
+            { 1736704, 0x564EBC }, //BGB 1.5.3/1.5.4
+            { 1740800, 0x566EDC }, //BGB 1.5.5/1.5.6
+            { 14290944, 0 }, //GSR r600
+            { 14180352, 0 }, //GSR r604/614
+        };
 
-        if (baseOffset == 0)
-        {
-            vars.romOffset = (IntPtr)1;
-            vars.wramOffset = (IntPtr)1;            
-        }
-        else
+        int baseOffset;
+        if (states.TryGetValue(memorySize, out baseOffset))
         {
             vars.romOffset = IntPtr.Zero;
             vars.wramOffset = IntPtr.Zero;
 
-            if (baseOffset == int.MaxValue) //gambatte
+            var state = proc.ProcessName.ToLower();
+            if (state.Contains("gambatte"))
             {
                 if (vars.ptrOffset == IntPtr.Zero)
                 {
@@ -112,17 +98,16 @@ startup
                     foreach (var page in proc.MemoryPages())
                     {
                         var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-
                         if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
                             break;
                     }
 
-                    vars.ptrOffset  = ptrOffset;
+                    vars.ptrOffset = ptrOffset;
                     vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x28);
                     vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
                 }
             }
-            else if (baseOffset != 0) //bgb
+            else if (state == "bgb")
             {
                 if (vars.ptrOffset == IntPtr.Zero)
                 {
@@ -131,24 +116,35 @@ startup
                     vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
                 }
 
-                vars.wramOffset += 0xC000;
-            }
-            
-            if (vars.ptrOffset != IntPtr.Zero)
-            {
-                vars.romPtr.Update(proc);
-                vars.romOffset += vars.romPtr.Current;
-                
-                vars.wramPtr.Update(proc);
-                vars.wramOffset += vars.wramPtr.Current;
+                vars.wramOffset += 0xC000;                
             }
 
+            vars.romPtr.Update(proc);         
+            vars.wramPtr.Update(proc);
+            vars.romOffset += vars.romPtr.Current;   
+            vars.wramOffset += vars.wramPtr.Current;
             if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
             {
+                vars.version = proc.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
+                vars.watchers = vars.GetWatcherList();
+                vars.stopwatch.Reset();
+                
                 print("[Autosplitter] ROM: " + vars.romOffset.ToString("X8"));
                 print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
+                if (vars.version == 0x00)
+                    print("[Autosplitter] LA");
+                else if (vars.version == 0x80)
+                    print("[Autosplitter] LADX");
+
+                return true;
             }
+            else
+                vars.stopwatch.Restart();
         }
+        else
+            vars.stopwatch.Reset();
+
+        return false;
     });
 
     vars.Current = (Func<string, int, bool>)((name, value) => 
@@ -235,7 +231,7 @@ startup
             { "boomerang", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xF4) },
             { "l1Sword", vars.Current("music", 0x0F) && vars.Current("overworldScreen", 0xF2) },
             { "l2Sword", vars.Current("music", 0x0F) && vars.Current("overworldScreen", 0x8A) },
-            { "yoshi", vars.Changed("tradingItem", 0x01) },
+            { "yoshi", vars.Changed("tradingItem", 0x01) && vars.Current("overworldScreen", 0xB3) },
 
             { "house", vars.Current("overworldScreen", 0xA2) },
             { "woods", vars.Current("overworldScreen", 0x90) && vars.Current("tailKey", 0x01) },
@@ -279,11 +275,10 @@ startup
 init
 {
     vars.ptrOffset = IntPtr.Zero;
-    vars.romOffset = IntPtr.Zero;
-    vars.wramOffset = IntPtr.Zero;
-
     vars.romPtr = new MemoryWatcher<byte>(IntPtr.Zero);
     vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
+    vars.romOffset = IntPtr.Zero;
+    vars.wramOffset = IntPtr.Zero;
 
     vars.version = 0xFF;
     vars.watchers = new MemoryWatcherList();
@@ -299,37 +294,16 @@ update
 
 	if (vars.stopwatch.ElapsedMilliseconds > 1500)
 	{
-        vars.FindOffsets(game, modules.First().ModuleMemorySize);
-
-        if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
-        {
-            vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
-            if (vars.version == 0x00)
-                print("[Autosplitter] LA");
-            else if (vars.version == 0x80)
-                print("[Autosplitter] LADX");
-
-            vars.watchers = vars.GetWatcherList();
-            vars.stopwatch.Reset();
-        }
-        else
-        {
-            vars.stopwatch.Restart();
+        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize))
             return false;
-        }
 	}
     else if (vars.watchers.Count == 0)
         return false;
 
     vars.romPtr.Update(game);
     vars.wramPtr.Update(game);
-
     if (vars.romPtr.Changed || vars.wramPtr.Changed)
-    {
-        vars.FindOffsets(game, modules.First().ModuleMemorySize);
-        vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
-        vars.watchers = vars.GetWatcherList();
-    }
+        vars.TryFindOffsets(game, modules.First().ModuleMemorySize);
     
     vars.watchers.UpdateAll(game);
 }
