@@ -174,13 +174,13 @@ startup
         var wram = (IntPtr)vars.wramOffset;
         return new MemoryWatcherList
         {
+            new MemoryWatcher<byte>(wram + 0x03B0) { Name = "objectState" },
             new MemoryWatcher<long>(wram + 0x1B65) { Name = "dungeonFlags" },
             new MemoryWatcher<byte>(wram + 0x1B54) { Name = "overworldScreen" },
             new MemoryWatcher<byte>(wram + 0x1BAE) { Name = "submapScreen" },
             new MemoryWatcher<byte>(wram + 0x1B60) { Name = "submapIndex" },
             new MemoryWatcher<byte>(wram + 0x13CA) { Name = "music" },
             new MemoryWatcher<byte>(wram + 0x13C8) { Name = "sound" },
-            new MemoryWatcher<byte>(wram + 0x13B0) { Name = "objectState" },
             new MemoryWatcher<byte>(wram + 0x1B11) { Name = "tailKey" },
             new MemoryWatcher<byte>(wram + 0x191D) { Name = "featherRoom" },
             new MemoryWatcher<byte>(wram + 0x1920) { Name = "braceletRoom" },
