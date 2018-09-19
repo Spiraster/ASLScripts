@@ -1,6 +1,8 @@
 state("bgb") {}
+state("bgb64") {}
 state("gambatte") {}
 state("gambatte_qt") {}
+state("gambatte_qt_nonpsr") {}
 
 startup
 {
@@ -76,65 +78,57 @@ startup
             { 1699840, 0x55DCA0 }, //BGB 1.5.2
             { 1736704, 0x564EBC }, //BGB 1.5.3/1.5.4
             { 1740800, 0x566EDC }, //BGB 1.5.5/1.5.6
+            { 1769472, 0x56CF14 }, //BGB 1.5.7
+            { 4632576, 0x803100 }, //BGB 1.5.7 (x64)
             { 14290944, 0 }, //GSR r600
             { 14180352, 0 }, //GSR r604/614
+            { 14209024, 0 }, //GSR r649
         };
 
         int baseOffset;
         if (states.TryGetValue(memorySize, out baseOffset))
         {
-            vars.romOffset = IntPtr.Zero;
-            vars.wramOffset = IntPtr.Zero;
+            int romOffset = 0;
+            int wramOffset = 0;
 
             var state = proc.ProcessName.ToLower();
             if (state.Contains("gambatte"))
             {
-                if (vars.ptrOffset == IntPtr.Zero)
+                print("[Autosplitter] Scanning memory");
+                var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05");
+
+                int ptrOffset = 0;
+                foreach (var page in proc.MemoryPages())
                 {
-                    print("[Autosplitter] Scanning memory");
-                    var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
+                    var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+                    if ((ptrOffset = (int)scanner.Scan(target)) != 0)
+                        break;
+                }
 
-                    var ptrOffset = IntPtr.Zero;
-                    foreach (var page in proc.MemoryPages())
-                    {
-                        var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-                        if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
-                            break;
-                    }
-
-                    vars.ptrOffset = ptrOffset;
-                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x28);
-                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
+                if (ptrOffset != 0)
+                {
+                    romOffset = ptrOffset - 0x18;
+                    wramOffset = ptrOffset - 0x10;
                 }
             }
             else if (state == "bgb")
             {
-                if (vars.ptrOffset == IntPtr.Zero)
-                {
-                    vars.ptrOffset = proc.ReadPointer(proc.ReadPointer((IntPtr)baseOffset) + 0x34);
-                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset + 0x10);
-                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
-                }
-
-                vars.wramOffset += 0xC000;                
+                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x34) + 0x10;
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x34) + 0x108;
+            }
+            else if (state == "bgb64")
+            {
+                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x44) + 0x18;
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x44) + 0x190;
             }
 
-            vars.romPtr.Update(proc);         
-            vars.wramPtr.Update(proc);
-            vars.romOffset += vars.romPtr.Current;   
-            vars.wramOffset += vars.wramPtr.Current;
-            if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
+            if (proc.ReadValue<int>((IntPtr)romOffset) != 0)
             {
-                vars.version = proc.ReadValue<byte>((IntPtr)vars.romOffset + 0x143);
-                vars.watchers = vars.GetWatcherList();
+                vars.watchers = vars.GetWatcherList(romOffset - 0x400000, wramOffset - 0x400000);
                 vars.stopwatch.Reset();
-                
-                print("[Autosplitter] ROM: " + vars.romOffset.ToString("X8"));
-                print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
-                if (vars.version == 0x00)
-                    print("[Autosplitter] LA");
-                else if (vars.version == 0x80)
-                    print("[Autosplitter] LADX");
+
+                vars.watchers["version"].Update(proc);
+                print(string.Format("[Autosplitter] ROM Loaded: {0}", (vars.watchers["version"].Current == 0x80) ? "LADX" : "LA"));
 
                 return true;
             }
@@ -157,44 +151,39 @@ startup
         return vars.watchers[name].Changed && vars.watchers[name].Current == value;
     });
 
-    vars.Bit = (Func<int, int, bool>)((value, bit) =>
-    {
-        return ((value >> bit) & 1) == 1;
-    });
-
     vars.Instrument = (Func<int, bool>)((index) => 
     {
         var flags = vars.watchers["dungeonFlags"].Current;
         var dungeon = BitConverter.GetBytes(flags)[index];
-        return vars.Bit(dungeon, 1);
+        return ((dungeon >> 1) & 1) == 1;
     });
 
-    vars.GetWatcherList = (Func<MemoryWatcherList>)(() =>
+    vars.GetWatcherList = (Func<int, int, MemoryWatcherList>)((romOffset, wramOffset) =>
     {
-        var wram = (IntPtr)vars.wramOffset;
         return new MemoryWatcherList
         {
-            new MemoryWatcher<byte>(wram + 0x03B0) { Name = "objectState" },
-            new MemoryWatcher<long>(wram + 0x1B65) { Name = "dungeonFlags" },
-            new MemoryWatcher<byte>(wram + 0x1B54) { Name = "overworldScreen" },
-            new MemoryWatcher<byte>(wram + 0x1BAE) { Name = "submapScreen" },
-            new MemoryWatcher<byte>(wram + 0x1B60) { Name = "submapIndex" },
-            new MemoryWatcher<byte>(wram + 0x13CA) { Name = "music" },
-            new MemoryWatcher<byte>(wram + 0x13C8) { Name = "sound" },
-            new MemoryWatcher<byte>(wram + 0x1B11) { Name = "tailKey" },
-            new MemoryWatcher<byte>(wram + 0x191D) { Name = "featherRoom" },
-            new MemoryWatcher<byte>(wram + 0x1920) { Name = "braceletRoom" },
-            new MemoryWatcher<byte>(wram + 0x1946) { Name = "bootsRoom" },
-            new MemoryWatcher<byte>(wram + 0x1ABE) { Name = "ocarinaRoom" },
-            new MemoryWatcher<byte>(wram + 0x1B0C) { Name = "flippers" },
-            new MemoryWatcher<byte>(wram + 0x1B44) { Name = "shieldLevel" },
-            new MemoryWatcher<byte>(wram + 0x1A37) { Name = "magicRodRoom" },
-            new MemoryWatcher<byte>(wram + 0x1B0E) { Name = "tradingItem" },
-            new MemoryWatcher<byte>(wram + 0x1B6E) { Name = "shopThefts" },
-            new MemoryWatcher<byte>(wram + 0x1B73) { Name = "marin" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x03B0)) { Name = "objectState" },
+            new MemoryWatcher<long>(new DeepPointer(wramOffset, 0x1B65)) { Name = "dungeonFlags" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B54)) { Name = "overworldScreen" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1BAE)) { Name = "submapScreen" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B60)) { Name = "submapIndex" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x13CA)) { Name = "music" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x13C8)) { Name = "sound" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B11)) { Name = "tailKey" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x191D)) { Name = "featherRoom" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1920)) { Name = "braceletRoom" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1946)) { Name = "bootsRoom" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1ABE)) { Name = "ocarinaRoom" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B0C)) { Name = "flippers" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B44)) { Name = "shieldLevel" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1A37)) { Name = "magicRodRoom" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B0E)) { Name = "tradingItem" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B6E)) { Name = "shopThefts" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B73)) { Name = "marin" },
 
-            new MemoryWatcher<byte>(wram + 0xEFF) { Name = "resetCheck" },
-            new MemoryWatcher<short>(wram + 0x1B95) { Name = "gameState" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0xEFF)) { Name = "resetCheck" },
+            new MemoryWatcher<short>(new DeepPointer(wramOffset, 0x1B95)) { Name = "gameState" },
+            new MemoryWatcher<byte>(new DeepPointer(romOffset, 0x143)) { Name = "version" },
         };
     });
 
@@ -245,7 +234,7 @@ startup
             { "creditsWarp", vars.Current("gameState", 0x0301) },
         };
 
-        if (vars.version == 0) //LA
+        if (vars.watchers["version"].Current == 0) //LA
         {
             splits.Add("d1End", vars.Current("music", 0x05) && vars.Instrument(0));
             splits.Add("d2End", vars.Current("music", 0x05) && vars.Instrument(1));
@@ -256,7 +245,7 @@ startup
             splits.Add("d7End", vars.Current("music", 0x06) && vars.Instrument(6));
             splits.Add("d8End", vars.Current("music", 0x06) && vars.Instrument(7));
         }
-        else if (vars.version == 0x80) //LADX
+        else if (vars.watchers["version"].Current == 0x80) //LADX
         {
             splits.Add("d1End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x00));
             splits.Add("d2End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x01));
@@ -274,13 +263,6 @@ startup
 
 init
 {
-    vars.ptrOffset = IntPtr.Zero;
-    vars.romPtr = new MemoryWatcher<byte>(IntPtr.Zero);
-    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
-    vars.romOffset = IntPtr.Zero;
-    vars.wramOffset = IntPtr.Zero;
-
-    vars.version = 0xFF;
     vars.watchers = new MemoryWatcherList();
     vars.pastSplits = new HashSet<string>();
 
@@ -299,11 +281,6 @@ update
 	}
     else if (vars.watchers.Count == 0)
         return false;
-
-    vars.romPtr.Update(game);
-    vars.wramPtr.Update(game);
-    if (vars.romPtr.Changed || vars.wramPtr.Changed)
-        vars.TryFindOffsets(game, modules.First().ModuleMemorySize);
     
     vars.watchers.UpdateAll(game);
 }
