@@ -3,6 +3,7 @@ state("bgb64") {}
 state("gambatte") {}
 state("gambatte_qt") {}
 state("gambatte_qt_nonpsr") {}
+state("emuhawk") {}
 
 startup
 {
@@ -70,7 +71,7 @@ startup
 
     vars.stopwatch = new Stopwatch();
 
-    vars.TryFindOffsets = (Func<Process, int, bool>)((proc, memorySize) => 
+    vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
     {
         var states = new Dictionary<int, int>
         {
@@ -83,48 +84,52 @@ startup
             { 14290944, 0 }, //GSR r600
             { 14180352, 0 }, //GSR r604/614
             { 14209024, 0 }, //GSR r649
+            { 7061504, 0 }, //BizHawk 2.3
         };
 
-        int baseOffset;
-        if (states.TryGetValue(memorySize, out baseOffset))
+        int ptrOffset;
+        if (states.TryGetValue(memorySize, out ptrOffset))
         {
-            int romOffset = 0;
-            int wramOffset = 0;
+            long romOffset = 0;
+            long wramOffset = 0;
 
             var state = proc.ProcessName.ToLower();
             if (state.Contains("gambatte"))
             {
-                print("[Autosplitter] Scanning memory");
-                var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05");
+                var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05 00 00");
 
-                int ptrOffset = 0;
-                foreach (var page in proc.MemoryPages())
+                var scanOffset = vars.SigScan(proc, target);
+                if (scanOffset != 0)
                 {
-                    var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-                    if ((ptrOffset = (int)scanner.Scan(target)) != 0)
-                        break;
+                    romOffset = scanOffset - 0x18;
+                    wramOffset = scanOffset - 0x10;
                 }
+            }
+            else if (state == "emuhawk")
+            {
+                var target = new SigScanTarget(0, "05 00 00 00 ?? 00 00 00 00 ?? ?? 00 00 ?? ?? 00 00 ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
 
-                if (ptrOffset != 0)
+                var scanOffset = vars.SigScan(proc, target);
+                if (scanOffset != 0)
                 {
-                    romOffset = ptrOffset - 0x18;
-                    wramOffset = ptrOffset - 0x10;
+                    romOffset = scanOffset - 0x50;
+                    wramOffset = scanOffset - 0x40;
                 }
             }
             else if (state == "bgb")
             {
-                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x34) + 0x10;
-                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x34) + 0x108;
+                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x34) + 0x10;
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x34) + 0x108;
             }
             else if (state == "bgb64")
             {
-                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x44) + 0x18;
-                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)baseOffset) + 0x44) + 0x190;
+                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x44) + 0x18;
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x44) + 0x190;
             }
 
             if (proc.ReadValue<int>((IntPtr)romOffset) != 0)
             {
-                vars.watchers = vars.GetWatcherList(romOffset - 0x400000, wramOffset - 0x400000);
+                vars.watchers = vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress));
                 vars.stopwatch.Reset();
 
                 vars.watchers["version"].Update(proc);
@@ -139,6 +144,21 @@ startup
             vars.stopwatch.Reset();
 
         return false;
+    });
+
+    vars.SigScan = (Func<Process, SigScanTarget, long>)((proc, target) =>
+    {
+        print("[Autosplitter] Scanning memory");
+
+        long result = 0;
+        foreach (var page in proc.MemoryPages())
+        {
+            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            if ((result = (long)scanner.Scan(target)) != 0)
+                break;
+        }
+
+        return result;
     });
 
     vars.Current = (Func<string, int, bool>)((name, value) => 
@@ -276,7 +296,7 @@ update
 
 	if (vars.stopwatch.ElapsedMilliseconds > 1500)
 	{
-        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize))
+        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
             return false;
 	}
     else if (vars.watchers.Count == 0)
