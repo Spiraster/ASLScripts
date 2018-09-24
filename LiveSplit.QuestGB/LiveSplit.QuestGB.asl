@@ -1,6 +1,9 @@
 state("bgb") {}
+state("bgb64") {}
 state("gambatte") {}
 state("gambatte_qt") {}
+state("gambatte_qt_nonpsr") {}
+state("emuhawk") {}
 
 startup
 {
@@ -25,159 +28,173 @@ startup
 
     vars.timer_OnStart = (EventHandler)((s, e) =>
     {
-        vars.splits = vars.GetSplitList(vars.version);
+        vars.splits = vars.GetSplitList();
     });
     timer.OnStart += vars.timer_OnStart;
 
-    vars.FindOffsets = (Action<Process, int>)((proc, memorySize) => 
+    vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
     {
-        var baseOffset = 0;
-        switch (memorySize)
+        var states = new Dictionary<int, int>
         {
-            case 1691648: //bgb (1.5.1)
-                baseOffset = 0x55BC7C;
-                break;
-            case 1699840: //bgb (1.5.2)
-                baseOffset = 0x55DCA0;
-                break;
-            case 1736704: //bgb (1.5.3/1.5.4)
-                baseOffset = 0x564EBC;
-                break;
-            case 1740800: //bgb (1.5.5/1.5.6)
-                baseOffset = 0x566EDC;
-                break;
-            case 14290944: //gambatte-speedrun (r600)
-            case 14180352: //gambatte-speedrun (r604/r614)
-                baseOffset = int.MaxValue;
-                break;
-        }
+            { 1691648, 0x55BC7C }, //BGB 1.5.1
+            { 1699840, 0x55DCA0 }, //BGB 1.5.2
+            { 1736704, 0x564EBC }, //BGB 1.5.3/1.5.4
+            { 1740800, 0x566EDC }, //BGB 1.5.5/1.5.6
+            { 1769472, 0x56CF14 }, //BGB 1.5.7
+            { 4632576, 0x803100 }, //BGB 1.5.7 (x64)
+            { 14290944, 0 }, //GSR r600
+            { 14180352, 0 }, //GSR r604/614
+            { 14209024, 0 }, //GSR r649
+            { 7061504, 0 }, //BizHawk 2.3
+        };
 
-        if (baseOffset == 0)
+        int ptrOffset;
+        if (states.TryGetValue(memorySize, out ptrOffset))
         {
-            vars.romOffset = (IntPtr)1;
-            vars.wramOffset = (IntPtr)1;            
+            long romOffset = 0;
+            long wramOffset = 0;
+
+            var state = proc.ProcessName.ToLower();
+            if (state.Contains("gambatte"))
+            {
+                var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05 00 00");
+
+                var scanOffset = vars.SigScan(proc, target);
+                if (scanOffset != 0)
+                {
+                    romOffset = scanOffset - 0x18;
+                    wramOffset = scanOffset - 0x10;
+                }
+            }
+            else if (state == "emuhawk")
+            {
+                var target = new SigScanTarget(0, "05 00 00 00 ?? 00 00 00 00 ?? ?? 00 00 ?? ?? 00 00 ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
+
+                var scanOffset = vars.SigScan(proc, target);
+                if (scanOffset != 0)
+                {
+                    romOffset = scanOffset - 0x50;
+                    wramOffset = scanOffset - 0x40;
+                }
+            }
+            else if (state == "bgb")
+            {
+                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x34) + 0x10;
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x34) + 0x108;
+            }
+            else if (state == "bgb64")
+            {
+                romOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x44) + 0x18;
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x44) + 0x190;
+            }
+
+            if (proc.ReadValue<int>((IntPtr)romOffset) != 0)
+            {
+                print("[Autosplitter] ROM Pointer: " + romOffset.ToString("X8"));
+                print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
+
+                vars.watchers = new MemoryWatcherList { new MemoryWatcher<byte>(new DeepPointer((int)(romOffset - baseAddress), 0x14A)) { Name = "version" } };
+                vars.watchers.UpdateAll(proc);
+                vars.watchers.AddRange(vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress)));
+                vars.stopwatch.Reset();
+                
+                return true;
+            }
+            else
+                vars.stopwatch.Restart();
         }
         else
-        {
-            vars.romOffset = IntPtr.Zero;
-            vars.wramOffset = IntPtr.Zero;
+            vars.stopwatch.Reset();
 
-            if (baseOffset == int.MaxValue) //gambatte
-            {
-                if (vars.ptrOffset == IntPtr.Zero)
-                {
-                    print("[Autosplitter] Scanning memory");
-                    var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-
-                    var ptrOffset = IntPtr.Zero;
-                    foreach (var page in proc.MemoryPages())
-                    {
-                        var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-
-                        if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
-                            break;
-                    }
-                    
-                    vars.ptrOffset = ptrOffset;
-                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x28);
-                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
-                }
-            }
-            else if (baseOffset != 0) //bgb
-            {
-                if (vars.ptrOffset == IntPtr.Zero)
-                {
-                    vars.ptrOffset = proc.ReadPointer(proc.ReadPointer((IntPtr)baseOffset) + 0x34);
-                    vars.romPtr = new MemoryWatcher<int>(vars.ptrOffset + 0x10);
-                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
-                }
-
-                vars.wramOffset += 0xC000;
-            }
-            
-            if (vars.ptrOffset != IntPtr.Zero)
-            {
-                vars.romPtr.Update(proc);
-                vars.romOffset += vars.romPtr.Current;
-                
-                vars.wramPtr.Update(proc);
-                vars.wramOffset += vars.wramPtr.Current;
-            }
-
-            if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
-            {
-                print("[Autosplitter] ROM: " + vars.romOffset.ToString("X8"));
-                print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
-            }
-        }
+        return false;
     });
 
-    vars.GetWatcherList = (Func<IntPtr, byte, MemoryWatcherList>)((wramOffset, version) =>
-    {   
-        if (version == 0) //JP
-        {
-            print("[Autosplitter] JP");
-            return new MemoryWatcherList
-            {
-                new MemoryWatcher<byte>(wramOffset + 0x630) { Name = "EnemyActive" },
-                new MemoryWatcher<ushort>(wramOffset + 0x631) { Name = "EnemyName" },
-                new MemoryWatcher<ushort>(wramOffset + 0x1834) { Name = "TitleState" },
-                new MemoryWatcher<ushort>(wramOffset + 0x200) { Name = "ResetCheck" },
-            };
-        }
-        else //US
-        {
-            print("[Autosplitter] US");
-            return new MemoryWatcherList
-            {
-                new MemoryWatcher<byte>(wramOffset + 0x615) { Name = "EnemyActive" },
-                new MemoryWatcher<ushort>(wramOffset + 0x616) { Name = "EnemyName" },
-                new MemoryWatcher<ushort>(wramOffset + 0x151A) { Name = "TitleState" },
-                new MemoryWatcher<ushort>(wramOffset + 0x200) { Name = "ResetCheck" },
-            };
-        }
-    });
-
-    vars.GetSplitList = (Func<int, List<Tuple<string, List<Tuple<string, int>>>>>)((version) =>
+    vars.SigScan = (Func<Process, SigScanTarget, long>)((proc, target) =>
     {
-        if (version == 0) //JP
+        print("[Autosplitter] Scanning memory");
+
+        long result = 0;
+        foreach (var page in proc.MemoryPages())
         {
-            return new List<Tuple<string, List<Tuple<string, int>>>>
+            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            if ((result = (long)scanner.Scan(target)) != 0)
+                break;
+        }
+
+        return result;
+    });
+
+    vars.Current = (Func<string, int, bool>)((name, value) => 
+    {
+        return vars.watchers[name].Current == value;
+    });
+
+    vars.GetWatcherList = (Func<int, int, MemoryWatcherList>)((romOffset, wramOffset) =>
+    {
+        if (vars.watchers["version"].Current == 0) //JP
+        {
+            print("[Autosplitter] Game Version: JP");
+            return new MemoryWatcherList
             {
-                Tuple.Create("Tim", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xE258), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Solvaring", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x845A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Kiliac", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x0859), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Dragon1", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x2E59), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Zelse", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xAA5A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Nepty", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xD05A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Lavaar1", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x425B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Fargo", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xF65A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Lavaar2", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x685B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Shilf", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xC659), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Dragon2", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xEC59), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Guilty", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x8E5B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Beigis", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x1C5B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Mammon", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x125A), Tuple.Create("EnemyActive", 0) }),
+                new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x630)) { Name = "EnemyActive" },
+                new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x631)) { Name = "EnemyName" },
+                new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1834)) { Name = "TitleState" },
+                new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x200)) { Name = "ResetCheck" },
             };
         }
         else //US
         {
-            return new List<Tuple<string, List<Tuple<string, int>>>>
+            print("[Autosplitter] Game Version: US");
+            return new MemoryWatcherList
             {
-                Tuple.Create("Tim", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xF859), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Solvaring", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x9A5B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Kiliac", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x1E5A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Dragon1", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x445A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Zelse", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xC05B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Nepty", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xE65B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Lavaar1", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x585C), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Fargo", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x0C5C), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Lavaar2", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x7E5C), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Shilf", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xDC5A), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Dragon2", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x025B), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Guilty", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0xA45C), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Beigis", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x325C), Tuple.Create("EnemyActive", 0) }),
-                Tuple.Create("Mammon", new List<Tuple<string, int>> { Tuple.Create("EnemyName", 0x285B), Tuple.Create("EnemyActive", 0) }),
+                new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x615)) { Name = "EnemyActive" },
+                new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x616)) { Name = "EnemyName" },
+                new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x151A)) { Name = "TitleState" },
+                new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x200)) { Name = "ResetCheck" },
+            };
+        }
+    });
+
+    vars.GetSplitList = (Func<Dictionary<string, Dictionary<string, int>>>)(() =>
+    {
+        if (vars.watchers["version"].Current == 0) //JP
+        {
+            return new Dictionary<string, Dictionary<string, int>>
+            {
+                { "Tim", new Dictionary<string, int> { { "EnemyName", 0xE258 }, { "EnemyActive", 0 } } },
+                { "Solvaring", new Dictionary<string, int> { { "EnemyName", 0x845A }, { "EnemyActive", 0 } } },
+                { "Kiliac", new Dictionary<string, int> { { "EnemyName", 0x0859 }, { "EnemyActive", 0 } } },
+                { "Dragon1", new Dictionary<string, int> { { "EnemyName", 0x2E59 }, { "EnemyActive", 0 } } },
+                { "Zelse", new Dictionary<string, int> { { "EnemyName", 0xAA5A }, { "EnemyActive", 0 } } },
+                { "Nepty", new Dictionary<string, int> { { "EnemyName", 0xD05A }, { "EnemyActive", 0 } } },
+                { "Lavaar1", new Dictionary<string, int> { { "EnemyName", 0x425B }, { "EnemyActive", 0 } } },
+                { "Fargo", new Dictionary<string, int> { { "EnemyName", 0xF65A }, { "EnemyActive", 0 } } },
+                { "Lavaar2", new Dictionary<string, int> { { "EnemyName", 0x685B }, { "EnemyActive", 0 } } },
+                { "Shilf", new Dictionary<string, int> { { "EnemyName", 0xC659 }, { "EnemyActive", 0 } } },
+                { "Dragon2", new Dictionary<string, int> { { "EnemyName", 0xEC59 }, { "EnemyActive", 0 } } },
+                { "Guilty", new Dictionary<string, int> { { "EnemyName", 0x8E5B }, { "EnemyActive", 0 } } },
+                { "Beigis", new Dictionary<string, int> { { "EnemyName", 0x1C5B }, { "EnemyActive", 0 } } },
+                { "Mammon", new Dictionary<string, int> { { "EnemyName", 0x125A }, { "EnemyActive", 0 } } },
+            };
+        }
+        else //US
+        {
+            return new Dictionary<string, Dictionary<string, int>>
+            {
+                { "Tim", new Dictionary<string, int> { { "EnemyName", 0xF859 }, { "EnemyActive", 0 } } },
+                { "Solvaring", new Dictionary<string, int> { { "EnemyName", 0x9A5B }, { "EnemyActive", 0 } } },
+                { "Kiliac", new Dictionary<string, int> { { "EnemyName", 0x1E5A }, { "EnemyActive", 0 } } },
+                { "Dragon1", new Dictionary<string, int> { { "EnemyName", 0x445A }, { "EnemyActive", 0 } } },
+                { "Zelse", new Dictionary<string, int> { { "EnemyName", 0xC05B }, { "EnemyActive", 0 } } },
+                { "Nepty", new Dictionary<string, int> { { "EnemyName", 0xE65B }, { "EnemyActive", 0 } } },
+                { "Lavaar1", new Dictionary<string, int> { { "EnemyName", 0x585C }, { "EnemyActive", 0 } } },
+                { "Fargo", new Dictionary<string, int> { { "EnemyName", 0x0C5C }, { "EnemyActive", 0 } } },
+                { "Lavaar2", new Dictionary<string, int> { { "EnemyName", 0x7E5C }, { "EnemyActive", 0 } } },
+                { "Shilf", new Dictionary<string, int> { { "EnemyName", 0xDC5A }, { "EnemyActive", 0 } } },
+                { "Dragon2", new Dictionary<string, int> { { "EnemyName", 0x025B }, { "EnemyActive", 0 } } },
+                { "Guilty", new Dictionary<string, int> { { "EnemyName", 0xA45C }, { "EnemyActive", 0 } } },
+                { "Beigis", new Dictionary<string, int> { { "EnemyName", 0x325C }, { "EnemyActive", 0 } } },
+                { "Mammon", new Dictionary<string, int> { { "EnemyName", 0x285B }, { "EnemyActive", 0 } } },
             };
         }
     });
@@ -185,50 +202,25 @@ startup
 
 init
 {
-    vars.ptrOffset = IntPtr.Zero;
-    vars.romOffset = IntPtr.Zero;
-    vars.wramOffset = IntPtr.Zero;
-
-    vars.romPtr = new MemoryWatcher<byte>(IntPtr.Zero);
-    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
-
-    vars.version = 0xFF;
     vars.watchers = new MemoryWatcherList();
-    vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
+    vars.splits = new Dictionary<string, Dictionary<string, int>>();
 
     vars.stopwatch.Restart();
 }
 
 update
 {
-    if (vars.stopwatch.ElapsedMilliseconds > 1500)
-    {
-        vars.FindOffsets(game, modules.First().ModuleMemorySize);
-
-        if (vars.romOffset != IntPtr.Zero && vars.wramOffset != IntPtr.Zero)
-        {
-            vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x14A);
-            vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.version);
-            vars.stopwatch.Reset();
-        }
-        else
-        {
-            vars.stopwatch.Restart();
+	if (vars.stopwatch.ElapsedMilliseconds > 1500)
+	{
+        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
             return false;
-        }
-    }
+	}
     else if (vars.watchers.Count == 0)
         return false;
-
-    vars.romPtr.Update(game);
-    vars.wramPtr.Update(game);
-
-    if (vars.romPtr.Changed || vars.wramPtr.Changed)
-    {
-        vars.FindOffsets(game, modules.First().ModuleMemorySize);
-        vars.version = game.ReadValue<byte>((IntPtr)vars.romOffset + 0x14A);
-        vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.version);
-    }
+    
+    vars.watchers["version"].Update(game);
+    if (vars.watchers["version"].Changed)
+        vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress);
 
     vars.watchers.UpdateAll(game);
 }
@@ -247,19 +239,19 @@ split
 {
     foreach (var _split in vars.splits)
     {
-        if (settings[_split.Item1])
+        if (settings[_split.Key])
         {
             var count = 0;
-            foreach (var _condition in _split.Item2)
+            foreach (var _condition in _split.Value)
             {
-                if (vars.watchers[_condition.Item1].Current == _condition.Item2)
+                if (vars.watchers[_condition.Key].Current == _condition.Value)
                     count++;
             }
 
-            if (count == _split.Item2.Count)
+            if (count == _split.Value.Count)
             {
-                print("[Autosplitter] Split: " + _split.Item1);
-                vars.splits.Remove(_split);
+                print("[Autosplitter] Split: " + _split.Key);
+                vars.splits.Remove(_split.Key);
                 return true;
             }
         }

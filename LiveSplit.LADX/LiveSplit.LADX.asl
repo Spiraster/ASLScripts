@@ -129,11 +129,16 @@ startup
 
             if (proc.ReadValue<int>((IntPtr)romOffset) != 0)
             {
+                print("[Autosplitter] ROM Pointer: " + romOffset.ToString("X8"));
+                print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
+                
                 vars.watchers = vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress));
                 vars.stopwatch.Reset();
 
                 vars.watchers["version"].Update(proc);
-                print(string.Format("[Autosplitter] ROM Loaded: {0}", (vars.watchers["version"].Current == 0x80) ? "LADX" : "LA"));
+                print(string.Format("[Autosplitter] Game Version: {0}", (vars.watchers["version"].Current == 0x80) ? "LADX" : "LA"));
+                
+                vars.GetSplitList(); //calling now will prevent lag on first timer start
 
                 return true;
             }

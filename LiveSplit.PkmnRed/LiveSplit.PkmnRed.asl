@@ -36,103 +36,88 @@ startup
     });
     timer.OnStart += vars.timer_OnStart;
 
-    vars.FindOffsets = (Action<Process>)((proc) => 
+    vars.TryFindOffsets = (Func<Process, bool>)((proc) => 
     {
-        if (vars.ptrOffset == IntPtr.Zero)
+        print("[Autosplitter] Scanning memory");
+        var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05 00 00");
+
+        int scanOffset = 0;
+        foreach (var page in proc.MemoryPages())
         {
-            print("[Autosplitter] Scanning memory");
-            var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-
-            var ptrOffset = IntPtr.Zero;
-            foreach (var page in proc.MemoryPages())
-            {
-                var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-
-                if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
-                    break;
-            }
-
-            vars.ptrOffset = ptrOffset;
-            vars.hramOffset = vars.ptrOffset + 0x1E0;
-            vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
+            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            if ((scanOffset = (int)scanner.Scan(target)) != 0)
+                break;
         }
 
-        if (vars.ptrOffset != IntPtr.Zero)
+        if (scanOffset != 0)
         {
-            vars.wramPtr.Update(proc);
-            vars.wramOffset = (IntPtr)vars.wramPtr.Current;
-        }
+            var wramOffset = scanOffset - 0x10;
+            print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
-        if (vars.wramOffset != IntPtr.Zero && vars.hramOffset != IntPtr.Zero)
-        {
-            print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
-            print("[Autosplitter] HRAM: " + vars.hramOffset.ToString("X8"));
+            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000));
+            vars.stopwatch.Reset();
+
+            return true;
         }
+        else
+            vars.stopwatch.Restart();
+
+        return false;
     });
 
-    vars.GetWatcherList = (Func<IntPtr, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset) =>
+    vars.GetWatcherList = (Func<int, MemoryWatcherList>)((wramOffset) =>
     {   
         return new MemoryWatcherList
         {
-            //WRAM
-            new MemoryWatcher<byte>(wramOffset + 0x0001) { Name = "soundID" },
-            new MemoryWatcher<uint>(wramOffset + 0x03C9) { Name = "fileSelectTiles" },
-            new MemoryWatcher<uint>(wramOffset + 0x0477) { Name = "resetTiles" },
-            new MemoryWatcher<uint>(wramOffset + 0x0D40) { Name = "hofPlayerShown" },
-            new MemoryWatcher<byte>(wramOffset + 0x0FD8) { Name = "opponentPkmn" },
-            new MemoryWatcher<uint>(wramOffset + 0x0FDA) { Name = "opponentPkmnName" },
-            new MemoryWatcher<uint>(wramOffset + 0x104A) { Name = "opponentName" },
-            new MemoryWatcher<byte>(wramOffset + 0x1163) { Name = "partyCount" },
-            new MemoryWatcher<byte>(wramOffset + 0x135E) { Name = "mapIndex" },
-            new MemoryWatcher<ushort>(wramOffset + 0x1361) { Name = "playerPos" },
-            new MemoryWatcher<ushort>(wramOffset + 0x1FD7) { Name = "hofFadeTimer" },
-            new MemoryWatcher<ushort>(wramOffset + 0x1FFD) { Name = "state" },
-
-            //HRAM  
-            new MemoryWatcher<byte>(hramOffset + 0x33) { Name = "input" },         
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0001)) { Name = "soundID" },
+            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x03C9)) { Name = "fileSelectTiles" },
+            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0477)) { Name = "resetTiles" },
+            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0D40)) { Name = "hofPlayerShown" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0FD8)) { Name = "enemyPkmn" },
+            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0FDA)) { Name = "enemyPkmnName" },
+            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x104A)) { Name = "opponentName" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1163)) { Name = "partyCount" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x135E)) { Name = "mapIndex" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1361)) { Name = "playerPos" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FD7)) { Name = "hofFade" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FFD)) { Name = "stack" },
         };
     });
 
-    vars.GetSplitList = (Func<List<Tuple<string, List<Tuple<string, uint>>>>>)(() =>
+    vars.GetSplitList = (Func<Dictionary<string, Dictionary<string, uint>>>)(() =>
     {
-        return new List<Tuple<string, List<Tuple<string, uint>>>>
+        return new Dictionary<string, Dictionary<string, uint>>
         {
-            Tuple.Create("nidoran", new List<Tuple<string, uint>> { Tuple.Create("partyCount", 2u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("enterMtMoon", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x3Bu), Tuple.Create("playerPos", 0x0E23u) }),
-            Tuple.Create("exitMtMoon", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x0Fu), Tuple.Create("playerPos", 0x1805u) }),
-            Tuple.Create("nuggetBridge", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x8A828E91), Tuple.Create("mapIndex", 0x23u), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("hm02", new List<Tuple<string, uint>> { Tuple.Create("soundID", 0x94u), Tuple.Create("mapIndex", 0xBCu) }),
-            Tuple.Create("flute", new List<Tuple<string, uint>> { Tuple.Create("soundID", 0x94u), Tuple.Create("mapIndex", 0x95u) }),
-            Tuple.Create("silphGiovanni", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x958E8886), Tuple.Create("mapIndex", 0xEBu), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("exitVictoryRoad", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x22u), Tuple.Create("playerPos", 0x0E1Fu) }),
-            Tuple.Create("gym1", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x828E9181), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym2", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x9392888C), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym3", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x92E8938B), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym4", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x8A889184), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym5", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x80868E8A), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym6", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x91818092), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym7", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x88808B81), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("gym8", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x958E8886), Tuple.Create("mapIndex", 0x2Du), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("elite4_1", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x84918E8B), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }), //Tuple.Create("mapIndex", 0xF5u)
-            Tuple.Create("elite4_2", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x8D949181), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }), //Tuple.Create("mapIndex", 0xF6u)
-            Tuple.Create("elite4_3", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x93808680), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }), //Tuple.Create("mapIndex", 0xF7u)
-            Tuple.Create("elite4_4", new List<Tuple<string, uint>> { Tuple.Create("opponentName", 0x828D808B), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }), //Tuple.Create("mapIndex", 0x71u)
-            Tuple.Create("elite4_5", new List<Tuple<string, uint>> { Tuple.Create("opponentPkmnName", 0x948D8495), Tuple.Create("mapIndex", 0x78u), Tuple.Create("opponentPkmn", 0u), Tuple.Create("state", 0x03AEu) }),
-            Tuple.Create("hofFade", new List<Tuple<string, uint>> { Tuple.Create("mapIndex", 0x76u), Tuple.Create("hofPlayerShown", 1u), Tuple.Create("hofFadeTimer", 0x0108u) }),
+            { "nidoran", new Dictionary<string, uint> { { "partyCount", 2u }, { "stack", 0x03AEu } } },
+            { "enterMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x3Bu }, { "playerPos", 0x0E23u } } },
+            { "exitMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x0Fu }, { "playerPos", 0x1805u } } },
+            { "nuggetBridge", new Dictionary<string, uint> { { "opponentName", 0x8A828E91 }, { "mapIndex", 0x23u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "hm02", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0xBCu } } },
+            { "flute", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0x95u } } },
+            { "silphGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xEBu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "exitVictoryRoad", new Dictionary<string, uint> { { "mapIndex", 0x22u }, { "playerPos", 0x0E1Fu } } },
+            { "gym1", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym2", new Dictionary<string, uint> { { "opponentName", 0x9392888C }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym3", new Dictionary<string, uint> { { "opponentName", 0x92E8938B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym4", new Dictionary<string, uint> { { "opponentName", 0x8A889184 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym5", new Dictionary<string, uint> { { "opponentName", 0x80868E8A }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym6", new Dictionary<string, uint> { { "opponentName", 0x91818092 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym7", new Dictionary<string, uint> { { "opponentName", 0x88808B81 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "gym8", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0x2Du }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "elite4_1", new Dictionary<string, uint> { { "opponentName", 0x84918E8B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF5u }
+            { "elite4_2", new Dictionary<string, uint> { { "opponentName", 0x8D949181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF6u }
+            { "elite4_3", new Dictionary<string, uint> { { "opponentName", 0x93808680 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF7u }
+            { "elite4_4", new Dictionary<string, uint> { { "opponentName", 0x828D808B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0x71u }
+            { "elite4_5", new Dictionary<string, uint> { { "enemyPkmnName", 0x948D8495 }, { "mapIndex", 0x78u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "hofFade", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "hofFade", 0x0108u } } },
         };
     });
 }
 
 init
 {
-    vars.ptrOffset = IntPtr.Zero;
-    vars.wramOffset = IntPtr.Zero;
-    vars.hramOffset = IntPtr.Zero;
-    
-    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
-
     vars.watchers = new MemoryWatcherList();
-    vars.splits = new List<Tuple<string, List<Tuple<string, uint>>>>();
+    vars.splits = new Dictionary<string, Dictionary<string, uint>>();
 
     vars.stopwatch.Restart();
 }
@@ -140,61 +125,43 @@ init
 update
 {
     if (vars.stopwatch.ElapsedMilliseconds > 1500)
-    {
-        vars.FindOffsets(game);
-
-        if (vars.wramOffset != IntPtr.Zero && vars.hramOffset != IntPtr.Zero)
-        {
-            vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.hramOffset);
-            vars.stopwatch.Reset();
-        }
-        else
-        {
-            vars.stopwatch.Restart();
+	{
+        if (!vars.TryFindOffsets(game))
             return false;
-        }
-    }
+	}
     else if (vars.watchers.Count == 0)
         return false;
-
-    vars.wramPtr.Update(game);
-
-    if (vars.wramPtr.Changed)
-    {
-        vars.FindOffsets(game);
-        vars.watchers = vars.GetWatcherList(vars.wramOffset, vars.hramOffset);
-    }
-
+    
     vars.watchers.UpdateAll(game);
 }
 
 start
 {
-    return (vars.watchers["input"].Current & 0x09) != 0 && vars.watchers["fileSelectTiles"].Current == 0x96848DED && vars.watchers["state"].Current == 0x5B91;
+    return vars.watchers["fileSelectTiles"].Current == 0x96848DED && vars.watchers["stack"].Current == 0x5B91;
 }
 
 reset
 {
-    return (vars.watchers["input"].Current & 0x01) != 0 && vars.watchers["resetTiles"].Current == 0x928498ED;
+    return vars.watchers["resetTiles"].Current == 0x928498ED && vars.watchers["soundID"].Current == 0x90;
 }
 
 split
 {
     foreach (var _split in vars.splits)
     {
-        if (settings[_split.Item1])
+        if (settings[_split.Key])
         {
             var count = 0;
-            foreach (var _condition in _split.Item2)
+            foreach (var _condition in _split.Value)
             {
-                if (vars.watchers[_condition.Item1].Current == _condition.Item2)
+                if (vars.watchers[_condition.Key].Current == _condition.Value)
                     count++;
             }
 
-            if (count == _split.Item2.Count)
+            if (count == _split.Value.Count)
             {
-                print("[Autosplitter] Split: " + _split.Item1);
-                vars.splits.Remove(_split);
+                print("[Autosplitter] Split: " + _split.Key);
+                vars.splits.Remove(_split.Key);
                 return true;
             }
         }

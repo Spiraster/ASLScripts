@@ -1,134 +1,118 @@
 state("bgb") {}
+state("bgb64") {}
 state("gambatte") {}
 state("gambatte_qt") {}
+state("gambatte_qt_nonpsr") {}
+state("emuhawk") {}
 
 startup
 {
     vars.stopwatch = new Stopwatch();
 
-    vars.FindOffsets = (Action<Process, int>)((proc, memorySize) => 
+    vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
     {
-        var baseOffset = 0;
-        switch (memorySize)
+        var states = new Dictionary<int, int>
         {
-            case 1691648: //bgb (1.5.1)
-                baseOffset = 0x55BC7C;
-                break;
-            case 1699840: //bgb (1.5.2)
-                baseOffset = 0x55DCA0;
-                break;
-            case 1736704: //bgb (1.5.3/1.5.4)
-                baseOffset = 0x564EBC;
-                break;
-            case 1740800: //bgb (1.5.5/1.5.6)
-                baseOffset = 0x566EDC;
-                break;
-            case 14290944: //gambatte-speedrun (r600)
-            case 14180352: //gambatte-speedrun (r604/r614)
-                baseOffset = int.MaxValue;
-                break;
-        }
+            { 1691648, 0x55BC7C }, //BGB 1.5.1
+            { 1699840, 0x55DCA0 }, //BGB 1.5.2
+            { 1736704, 0x564EBC }, //BGB 1.5.3/1.5.4
+            { 1740800, 0x566EDC }, //BGB 1.5.5/1.5.6
+            { 1769472, 0x56CF14 }, //BGB 1.5.7
+            { 4632576, 0x803100 }, //BGB 1.5.7 (x64)
+            { 14290944, 0 }, //GSR r600
+            { 14180352, 0 }, //GSR r604/614
+            { 14209024, 0 }, //GSR r649
+            { 7061504, 0 }, //BizHawk 2.3
+        };
 
-        if (baseOffset == 0)
-            vars.wramOffset = (IntPtr)1;
+        int ptrOffset;
+        if (states.TryGetValue(memorySize, out ptrOffset))
+        {
+            long wramOffset = 0;
+
+            var state = proc.ProcessName.ToLower();
+            if (state.Contains("gambatte"))
+            {
+                var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05 00 00");
+
+                var scanOffset = vars.SigScan(proc, target);
+                if (scanOffset != 0)
+                    wramOffset = scanOffset - 0x10;
+            }
+            else if (state == "emuhawk")
+            {
+                var target = new SigScanTarget(0, "05 00 00 00 ?? 00 00 00 00 ?? ?? 00 00 ?? ?? 00 00 ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
+
+                var scanOffset = vars.SigScan(proc, target);
+                if (scanOffset != 0)
+                    wramOffset = scanOffset - 0x40;
+            }
+            else if (state == "bgb")
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x34) + 0x108;
+            else if (state == "bgb64")
+                wramOffset = proc.ReadValue<int>(proc.ReadPointer((IntPtr)ptrOffset) + 0x44) + 0x190;
+
+            if (proc.ReadValue<int>(proc.ReadPointer((IntPtr)wramOffset)) != 0)
+            {
+                print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
+
+                vars.watchers = vars.GetWatcherList((int)(wramOffset - baseAddress));
+                vars.stopwatch.Reset();
+                
+                return true;
+            }
+            else
+                vars.stopwatch.Restart();
+        }
         else
-        {
-            vars.wramOffset = IntPtr.Zero;
+            vars.stopwatch.Reset();
 
-            if (baseOffset == int.MaxValue) //gambatte
-            {
-                if (vars.ptrOffset == IntPtr.Zero)
-                {
-                    print("[Autosplitter] Scanning memory");
-                    var target = new SigScanTarget(0, "05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? ?? ?? F8 00 00 00");
-
-                    var ptrOffset = IntPtr.Zero;
-                    foreach (var page in proc.MemoryPages())
-                    {
-                        var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-
-                        if ((ptrOffset = scanner.Scan(target)) != IntPtr.Zero)
-                            break;
-                    }
-
-                    vars.ptrOffset = ptrOffset;
-                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset - 0x20);
-                }
-            }
-            else if (baseOffset != 0) //bgb
-            {
-                if (vars.ptrOffset == IntPtr.Zero)
-                {
-                    vars.ptrOffset = proc.ReadPointer(proc.ReadPointer((IntPtr)baseOffset) + 0x34);
-                    vars.wramPtr = new MemoryWatcher<int>(vars.ptrOffset + 0xC0);
-                }
-
-                vars.wramOffset += 0xC000;
-            }
-            
-            if (vars.ptrOffset != IntPtr.Zero)
-            {
-                vars.wramPtr.Update(proc);
-                vars.wramOffset += vars.wramPtr.Current;
-            }
-
-            if (vars.wramOffset != IntPtr.Zero)
-                print("[Autosplitter] WRAM: " + vars.wramOffset.ToString("X8"));
-        }
+        return false;
     });
 
-    vars.GetWatcherList = (Func<IntPtr, MemoryWatcherList>)((wramOffset) =>
-    {   
+    vars.SigScan = (Func<Process, SigScanTarget, long>)((proc, target) =>
+    {
+        print("[Autosplitter] Scanning memory");
+
+        long result = 0;
+        foreach (var page in proc.MemoryPages())
+        {
+            var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
+            if ((result = (long)scanner.Scan(target)) != 0)
+                break;
+        }
+
+        return result;
+    });
+
+    vars.GetWatcherList = (Func<int, MemoryWatcherList>)((wramOffset) =>
+    {
         return new MemoryWatcherList
         {
-            new MemoryWatcher<uint>(wramOffset + 0x9A) { Name = "GameState" },
-            new MemoryWatcher<byte>(wramOffset + 0x115A) { Name = "RudyHP" },
-            new MemoryWatcher<byte>(wramOffset + 0x1DFF) { Name = "ResetCheck" },
+            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x9A)) { Name = "GameState" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x115A)) { Name = "RudyHP" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1DFF)) { Name = "ResetCheck" },
         };
     });
 }
 
 init
-{    
-    vars.ptrOffset = IntPtr.Zero;
-    vars.wramOffset = IntPtr.Zero;
-
-    vars.wramPtr = new MemoryWatcher<byte>(IntPtr.Zero);
-
+{
     vars.watchers = new MemoryWatcherList();
-    vars.splits = new List<Tuple<string, List<Tuple<string, int>>>>();
 
     vars.stopwatch.Restart();
 }
 
 update
 {
-    if (vars.stopwatch.ElapsedMilliseconds > 1500)
-    {
-        vars.FindOffsets(game, modules.First().ModuleMemorySize);
-
-        if (vars.wramOffset != IntPtr.Zero)
-        {
-            vars.watchers = vars.GetWatcherList(vars.wramOffset);
-            vars.stopwatch.Reset();
-        }
-        else
-        {
-            vars.stopwatch.Restart();
+	if (vars.stopwatch.ElapsedMilliseconds > 1500)
+	{
+        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
             return false;
-        }
-    }
+	}
     else if (vars.watchers.Count == 0)
         return false;
-
-    vars.wramPtr.Update(game);
-
-    if (vars.wramPtr.Changed)
-    {
-        vars.FindOffsets(game, modules.First().ModuleMemorySize);
-        vars.watchers = vars.GetWatcherList(vars.wramOffset);
-    }
-
+    
     vars.watchers.UpdateAll(game);
 }
 
