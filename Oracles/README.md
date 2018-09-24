@@ -3,7 +3,8 @@ These are [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 
 ### Supported emulators:
 - BGB 1.5.1+
-- gambatte-speedrun r600+
+- Gambatte-Speedrun r600+
+- BizHawk 2.3+
 
 ## Features
 - Automatically start the timer when you select a file
@@ -25,4 +26,5 @@ Here you can enable/disable the options for auto start and auto splitting. If au
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- [Spiraster](http://twitch.tv/spiraster)
+- Twitch: https://www.twitch.tv/spiraster
+- Oracles Community Discord: https://discord.gg/dTmbSNQ

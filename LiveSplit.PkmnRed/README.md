@@ -2,7 +2,7 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **Pokémon Red Version** on emulator.
 
 ### Supported emulators:
-- gambatte-speedrun r600+
+- Gambatte-Speedrun r600+
 
 ## Features
 - Automatically start the timer when you start a new game
@@ -25,4 +25,5 @@ Here you can enable/disable the options for auto start, auto reset, and auto spl
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- [Spiraster](http://twitch.tv/spiraster)
+- Twitch: https://www.twitch.tv/spiraster
+- Pokemon Community Discord: https://discord.gg/0UUw8zDe2hWlwRsm

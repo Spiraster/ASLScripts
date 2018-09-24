@@ -3,7 +3,8 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 
 ### Supported emulators:
 - BGB 1.5.1+
-- gambatte-speedrun r600+
+- Gambatte-Speedrun r600+
+- BizHawk 2.3+
 
 ## Features
 - Automatically start the timer when you select a file
@@ -31,4 +32,5 @@ If you are playing LA, the autosplitter will instead split upon leaving the dung
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- [Spiraster](http://twitch.tv/spiraster)
+- Twitch: https://www.twitch.tv/spiraster
+- LA/DX Community Discord: https://discord.gg/EARy4Eb

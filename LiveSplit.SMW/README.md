@@ -26,4 +26,5 @@ Here you can enable/disable the options for auto start, auto reset, and auto spl
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- [Spiraster](http://twitch.tv/spiraster)
+- Twitch: https://www.twitch.tv/spiraster
+- SMW Community Discord: https://discord.gg/xTmwQ8P
