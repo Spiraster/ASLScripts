@@ -4,14 +4,14 @@ state("gambatte_qt") {}
 startup
 {
     //-------------------------------------------------------------//
-    settings.Add("nidoran", true, "Catch Nidoran");
-    settings.Add("enterMtMoon", true, "Enter Mt. Moon");
-    settings.Add("exitMtMoon", true, "Exit Mt. Moon");
-    settings.Add("nuggetBridge", true, "Nugget Bridge");
-    settings.Add("hm02", true, "Obtain HM02");
-    settings.Add("flute", true, "Obtain Poké Flute");
+    settings.Add("battles", true, "Battles");
+    settings.Add("other", true, "Other");
+    settings.Add("nsc", true, "NSC Only");
+
+    settings.CurrentDefaultParent = "battles";
+    settings.Add("nidoran", true, "Catch 2nd Pokemon (Nidoran/Spearow)");
     settings.Add("silphGiovanni", true, "Silph Co. (Giovanni)");
-    settings.Add("exitVictoryRoad", true, "Exit Victory Road");
+    settings.Add("nuggetBridge", true, "Nugget Bridge (Rocket)");
     settings.Add("gym1", true, "Pewter Gym (Brock)");
     settings.Add("gym2", true, "Cerulean Gym (Misty)");
     settings.Add("gym3", true, "Vermilion Gym (Lt. Surge)");
@@ -25,7 +25,22 @@ startup
     settings.Add("elite4_3", true, "Agatha");
     settings.Add("elite4_4", true, "Lance");
     settings.Add("elite4_5", true, "Champion");
-    settings.Add("hofFade", true, "HoF Fade Out (Final Split)");
+
+    settings.CurrentDefaultParent = "other";
+    settings.Add("rival", false, "Leave Oak's Lab (after rival fight)");
+    settings.Add("enterMtMoon", true, "Enter Mt. Moon");
+    settings.Add("exitMtMoon", true, "Exit Mt. Moon");
+    settings.Add("exitVictoryRoad", true, "Exit Victory Road");
+    settings.Add("hm02", true, "Obtain HM02");
+    settings.Add("flute", true, "Obtain Poké Flute");
+    settings.Add("hofGlitchless", true, "HoF Fade Out (Glitchless)");
+
+    settings.CurrentDefaultParent = "nsc";
+    settings.Add("deathfly", false, "Deathfly");
+    settings.Add("bc1", false, "Bug Catcher #1");
+    settings.Add("bc2", false, "Bug Catcher #2");
+    settings.Add("bc3", false, "Bug Catcher #3");
+    settings.Add("hofNSC", false, "HoF Fade Out (NSC)");
     //-------------------------------------------------------------//
 
     vars.stopwatch = new Stopwatch();
@@ -70,17 +85,20 @@ startup
         return new MemoryWatcherList
         {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0001)) { Name = "soundID" },
-            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x03C9)) { Name = "fileSelectTiles" },
-            new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0477)) { Name = "resetTiles" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0C26)) { Name = "cursorIndex" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x0C30)) { Name = "cursorPos" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0D40)) { Name = "hofPlayerShown" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0FD8)) { Name = "enemyPkmn" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0FDA)) { Name = "enemyPkmnName" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1016)) { Name = "pkmnHP" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x104A)) { Name = "opponentName" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1163)) { Name = "partyCount" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x117A)) { Name = "pkmnEXP" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x135E)) { Name = "mapIndex" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1361)) { Name = "playerPos" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FD7)) { Name = "hofFade" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FFD)) { Name = "stack" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FBF)) { Name = "stack2" },
         };
     });
 
@@ -89,13 +107,8 @@ startup
         return new Dictionary<string, Dictionary<string, uint>>
         {
             { "nidoran", new Dictionary<string, uint> { { "partyCount", 2u }, { "stack", 0x03AEu } } },
-            { "enterMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x3Bu }, { "playerPos", 0x0E23u } } },
-            { "exitMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x0Fu }, { "playerPos", 0x1805u } } },
             { "nuggetBridge", new Dictionary<string, uint> { { "opponentName", 0x8A828E91 }, { "mapIndex", 0x23u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "hm02", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0xBCu } } },
-            { "flute", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0x95u } } },
             { "silphGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xEBu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "exitVictoryRoad", new Dictionary<string, uint> { { "mapIndex", 0x22u }, { "playerPos", 0x0E1Fu } } },
             { "gym1", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym2", new Dictionary<string, uint> { { "opponentName", 0x9392888C }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym3", new Dictionary<string, uint> { { "opponentName", 0x92E8938B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
@@ -109,7 +122,20 @@ startup
             { "elite4_3", new Dictionary<string, uint> { { "opponentName", 0x93808680 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF7u }
             { "elite4_4", new Dictionary<string, uint> { { "opponentName", 0x828D808B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0x71u }
             { "elite4_5", new Dictionary<string, uint> { { "enemyPkmnName", 0x948D8495 }, { "mapIndex", 0x78u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "hofFade", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "hofFade", 0x0108u } } },
+
+            { "rival", new Dictionary<string, uint> { { "mapIndex", 0u }, { "partyCount", 1u } } },
+            { "enterMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x3Bu }, { "playerPos", 0x0E23u } } },
+            { "exitMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x0Fu }, { "playerPos", 0x1805u } } },
+            { "exitVictoryRoad", new Dictionary<string, uint> { { "mapIndex", 0x22u }, { "playerPos", 0x0E1Fu } } },
+            { "hm02", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0xBCu } } },
+            { "flute", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0x95u } } },
+            { "hofGlitchless", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "hofFade", 0x0108u } } },
+
+            { "deathfly", new Dictionary<string, uint> { { "mapIndex", 0x33u }, { "playerPos", 0x0112u }, { "pkmnHP", 0u }, { "stack", 0x0939u } } },
+            { "bc1", new Dictionary<string, uint> { { "pkmnEXP", 0xE000u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "bc2", new Dictionary<string, uint> { { "pkmnEXP", 0x4301u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "bc3", new Dictionary<string, uint> { { "mapIndex", 0x33u }, { "playerPos", 0x1D21u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "hofNSC", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "stack2", 0x0108u } } },
         };
     });
 }
@@ -137,12 +163,12 @@ update
 
 start
 {
-    return vars.watchers["fileSelectTiles"].Current == 0x96848DED && vars.watchers["stack"].Current == 0x5B91;
+    return vars.watchers["cursorIndex"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
 }
 
 reset
 {
-    return vars.watchers["resetTiles"].Current == 0x928498ED && vars.watchers["soundID"].Current == 0x90;
+    return vars.watchers["cursorPos"].Current == 0xC477 && vars.watchers["soundID"].Current == 0x90;
 }
 
 split
