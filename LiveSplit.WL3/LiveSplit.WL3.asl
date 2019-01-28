@@ -23,6 +23,7 @@ startup
             { 14180352, 0 }, //GSR r604/614
             { 14209024, 0 }, //GSR r649
             { 7061504, 0 }, //BizHawk 2.3
+            { 7249920, 0 }, //BizHawk 2.3.1
         };
 
         int ptrOffset;
