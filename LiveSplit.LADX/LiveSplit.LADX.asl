@@ -256,7 +256,7 @@ startup
             { "song1", vars.Current("music", 0x10) && (vars.Current("overworldScreen", 0xDC) || vars.Current("overworldScreen", 0x92)) },
             { "song2", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0x2A) },
             { "song3", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0xD4) },
-            { "creditsWarp", vars.Current("gameState", 0x0301) },
+            { "creditsWarp", vars.Current("gameState", 0x0101) },
         };
 
         if (vars.watchers["version"].Current == 0) //LA
