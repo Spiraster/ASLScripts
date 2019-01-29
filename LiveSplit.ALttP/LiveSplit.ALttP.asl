@@ -53,7 +53,7 @@ init
 	{
 		new MemoryWatcher<ushort>((IntPtr)memoryOffset + 0x221) { Name = "fileSelect" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x354) { Name = "linkState" },
-		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x110) { Name = "mapTile" },
+		new MemoryWatcher<short>((IntPtr)memoryOffset + 0x0A0) { Name = "mapTile" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x2D8) { Name = "itemValue" },
 		new MemoryWatcher<byte>((IntPtr)memoryOffset + 0xAA4) { Name = "world" },
 		new MemoryWatcher<short>((IntPtr)memoryOffset + 0xFC4) { Name = "yPos" },
@@ -85,12 +85,12 @@ split
 {
 	var swordUp = vars.watchers["linkState"].Changed && vars.watchers["linkState"].Current == 0x24;
 
-	var escape = settings["escape"] && vars.watchers["yPos"].Current > vars.watchers["yPos"].Old && vars.watchers["yPos"].Current == 0x0218 && vars.watchers["mapTile"].Current == 0x36; //old.yPos == 0x01 && current.yPos == 0x02 && current.world == 0x0A && current.mapTile == 0x36;
+	var escape = settings["escape"] && vars.watchers["yPos"].Current > vars.watchers["yPos"].Old && vars.watchers["yPos"].Current == 0x0218 && vars.watchers["mapTile"].Current == 0x0012; //old.yPos == 0x01 && current.yPos == 0x02 && current.world == 0x0A && current.mapTile == 0x36;
 	var pendant = settings["pendants"] && swordUp && vars.watchers["world"].Current == 0x0A && (vars.lastItem == 0x37 || vars.lastItem == 0x39 || vars.lastItem == 0x38);
 	var crystal = settings["crystals"] && swordUp && vars.watchers["world"].Current == 0x0A && vars.lastItem == 0x20;
 	var masterSword = settings["masterSword"] && vars.watchers["linkState"].Changed && vars.watchers["linkState"].Current == 0x17 && vars.watchers["world"].Current == 0x01;
-	var agahnim1 = settings["agahnim1"] && swordUp && vars.watchers["mapTile"].Current == 0x60;
-	var agahnim2 = settings["agahnim2"] && vars.watchers["linkState"].Old == 0x1D && vars.watchers["linkState"].Current == 0 && vars.watchers["mapTile"].Current == 0x27;
+	var agahnim1 = settings["agahnim1"] && swordUp && vars.watchers["mapTile"].Current == 0x0020;
+	var agahnim2 = settings["agahnim2"] && vars.watchers["linkState"].Old == 0x1D && vars.watchers["linkState"].Current == 0 && vars.watchers["mapTile"].Current == 0x000D;
 	var end = settings["end"] && vars.watchers["end"].Old == 0 && vars.watchers["end"].Current == 1 && vars.watchers["mapTile"].Current == 0;
 
 	return escape || pendant || crystal || masterSword || agahnim1 || agahnim2 || end;
