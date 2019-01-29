@@ -73,23 +73,31 @@ startup
 
     vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
     {
-        var states = new Dictionary<int, int>
+        var oldStates = new Dictionary<int, int>
         {
             { 1691648, 0x55BC7C }, //BGB 1.5.1
             { 1699840, 0x55DCA0 }, //BGB 1.5.2
             { 1736704, 0x564EBC }, //BGB 1.5.3/1.5.4
             { 1740800, 0x566EDC }, //BGB 1.5.5/1.5.6
-            { 1769472, 0x56CF14 }, //BGB 1.5.7
-            { 4632576, 0x803100 }, //BGB 1.5.7 (x64)
+            { 5656576, 0 }, //gambatte r571
             { 14290944, 0 }, //GSR r600
             { 14180352, 0 }, //GSR r604/614
-            { 14209024, 0 }, //GSR r649
+            { 6578176, 0 }, //BizHawk 2.2
+            { 6586368, 0 }, //BizHawk 2.2.1
+            { 6627328, 0 }, //BizHawk 2.2.2
             { 7061504, 0 }, //BizHawk 2.3
+        };
+
+        var currentStates = new Dictionary<int, int>
+        {
+            { 1769472, 0x56CF14 }, //BGB 1.5.7
+            { 4632576, 0x803100 }, //BGB 1.5.7 (x64)
+            { 14209024, 0 }, //GSR r649
             { 7249920, 0 }, //BizHawk 2.3.1
         };
 
         int ptrOffset;
-        if (states.TryGetValue(memorySize, out ptrOffset))
+        if (currentStates.TryGetValue(memorySize, out ptrOffset))
         {
             long romOffset = 0;
             long wramOffset = 0;
@@ -147,7 +155,11 @@ startup
                 vars.stopwatch.Restart();
         }
         else
+        {
             vars.stopwatch.Reset();
+            if (oldStates.ContainsKey(memorySize))
+                MessageBox.Show("The autosplitter detects an outdated emulator.\nPlease update your emulator to the newest version.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
 
         return false;
     });

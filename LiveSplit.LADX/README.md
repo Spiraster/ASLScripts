@@ -2,9 +2,9 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **The Legend of Zelda: Link's Awakening** (GB) and **The Legend of Zelda: Link's Awakening DX** (GBC) on emulator.
 
 ### Supported emulators:
-- BGB 1.5.1+
-- Gambatte-Speedrun r600+
-- BizHawk 2.3+ (w/ Gambatte core)
+- BGB 1.5.7
+- Gambatte-Speedrun r649
+- BizHawk 2.3.1 (w/ Gambatte core)
 
 ## Features
 - Automatically start the timer when you select a file
