@@ -69,7 +69,7 @@ startup
             var wramOffset = scanOffset - 0x10;
             print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
-            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000));
+            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000), (IntPtr)(scanOffset + 0x147C));
             vars.stopwatch.Reset();
 
             return true;
@@ -80,13 +80,12 @@ startup
         return false;
     });
 
-    vars.GetWatcherList = (Func<int, MemoryWatcherList>)((wramOffset) =>
+    vars.GetWatcherList = (Func<int, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset) =>
     {   
         return new MemoryWatcherList
         {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0001)) { Name = "soundID" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0C26)) { Name = "cursorIndex" },
-            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x0C30)) { Name = "cursorPos" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0D40)) { Name = "hofPlayerShown" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0FD8)) { Name = "enemyPkmn" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0FDA)) { Name = "enemyPkmnName" },
@@ -94,11 +93,14 @@ startup
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x104A)) { Name = "opponentName" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1163)) { Name = "partyCount" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x117A)) { Name = "pkmnEXP" },
+            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1359)) { Name = "playerID" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x135E)) { Name = "mapIndex" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1361)) { Name = "playerPos" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FD7)) { Name = "hofFade" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FFD)) { Name = "stack" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FBF)) { Name = "stack2" },
+
+            new MemoryWatcher<byte>(hramOffset + 0x34) { Name = "input" },
         };
     });
 
@@ -163,12 +165,7 @@ update
 
 start
 {
-    return vars.watchers["cursorIndex"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
-}
-
-reset
-{
-    return vars.watchers["cursorPos"].Current == 0xC477 && vars.watchers["soundID"].Current == 0x90;
+    return vars.watchers["cursorIndex"].Current == 0 && (vars.watchers["input"].Current & 0x80) == 0 && vars.watchers["playerID"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
 }
 
 split

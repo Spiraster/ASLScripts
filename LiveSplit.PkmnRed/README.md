@@ -6,7 +6,6 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 
 ## Features
 - Automatically start the timer when you start a new game
-- Automatically reset the timer when you delete your save file (Up+Select+B)
 - Automatically split for certain events (chosen in the settings)
 
 ## Installation
