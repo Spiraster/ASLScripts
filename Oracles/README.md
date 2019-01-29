@@ -4,7 +4,7 @@ These are [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 ### Supported emulators:
 - BGB 1.5.1+
 - Gambatte-Speedrun r600+
-- BizHawk 2.3+
+- BizHawk 2.3+ (w/ Gambatte core)
 
 ## Features
 - Automatically start the timer when you select a file
