@@ -4,6 +4,7 @@ This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveS
 ### Supported emulators:
 - higan v102+
 - Snes9x 1.53+
+- BizHawk 2.3+ (w/ BSNES core)
 
 ## Features
 - Automatically start the timer when you select a file

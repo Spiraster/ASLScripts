@@ -1,6 +1,7 @@
 state("higan"){}
 state("snes9x"){}
 state("snes9x-x64"){}
+state("emuhawk"){}
 
 startup
 {
@@ -44,6 +45,8 @@ init
 		{ 15859712, 0x952144 },   //higan v104
 		{ 16756736, 0x94F144 },   //higan v105tr1
 		{ 16019456, 0x94D144 },   //higan v106
+        { 7061504, 0x36F11500240 }, //BizHawk 2.3
+        { 7249920, 0x36F11500240 }, //BizHawk 2.3.1
 	};
 
 	long memoryOffset;
