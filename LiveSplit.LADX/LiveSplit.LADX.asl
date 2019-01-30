@@ -69,7 +69,7 @@ startup
     settings.Add("creditsWarp", false, "Credits Warp (ACE)");
     //-------------------------------------------------------------//
 
-    vars.stopwatch = new Stopwatch();
+    refreshRate = 0.5;
 
     vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
     {
@@ -142,8 +142,6 @@ startup
                 print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
                 
                 vars.watchers = vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress));
-                vars.stopwatch.Reset();
-
                 vars.watchers["version"].Update(proc);
                 print(string.Format("[Autosplitter] Game Version: {0}", (vars.watchers["version"].Current == 0x80) ? "LADX" : "LA"));
                 
@@ -151,15 +149,9 @@ startup
 
                 return true;
             }
-            else
-                vars.stopwatch.Restart();
         }
-        else
-        {
-            vars.stopwatch.Reset();
-            if (oldStates.ContainsKey(memorySize))
-                MessageBox.Show("The autosplitter detects an outdated emulator.\nPlease update your emulator to the newest version.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        else if (oldStates.ContainsKey(memorySize))
+            MessageBox.Show("The autosplitter detects an outdated emulator.\nPlease update your emulator to the newest version.", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
         return false;
     });
@@ -304,21 +296,16 @@ init
     vars.watchers = new MemoryWatcherList();
     vars.pastSplits = new HashSet<string>();
 
-    vars.stopwatch.Restart();
+    if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
+        throw new Exception("Emulated memory not yet initialized.");
+    else
+        refreshRate = 200/3.0;
 }
 
 update
 {
     if (timer.CurrentPhase == TimerPhase.NotRunning && vars.pastSplits.Count > 0)
         vars.pastSplits.Clear();
-
-	if (vars.stopwatch.ElapsedMilliseconds > 1500)
-	{
-        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
-            return false;
-	}
-    else if (vars.watchers.Count == 0)
-        return false;
     
     vars.watchers.UpdateAll(game);
 }
@@ -346,4 +333,9 @@ split
             return true;
         }
     }
+}
+
+exit
+{
+    refreshRate = 0.5;
 }

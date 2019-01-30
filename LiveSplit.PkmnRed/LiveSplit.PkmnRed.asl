@@ -43,7 +43,7 @@ startup
     settings.Add("hofNSC", false, "HoF Fade Out (NSC)");
     //-------------------------------------------------------------//
 
-    vars.stopwatch = new Stopwatch();
+    refreshRate = 0.5;
 
     vars.timer_OnStart = (EventHandler)((s, e) =>
     {
@@ -70,12 +70,9 @@ startup
             print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
             vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000), (IntPtr)(scanOffset + 0x147C));
-            vars.stopwatch.Reset();
 
             return true;
         }
-        else
-            vars.stopwatch.Restart();
 
         return false;
     });
@@ -147,19 +144,14 @@ init
     vars.watchers = new MemoryWatcherList();
     vars.splits = new Dictionary<string, Dictionary<string, uint>>();
 
-    vars.stopwatch.Restart();
+    if (!vars.TryFindOffsets(game))
+        throw new Exception("Emulated memory not yet initialized.");
+    else
+        refreshRate = 200/3.0;
 }
 
 update
 {
-    if (vars.stopwatch.ElapsedMilliseconds > 1500)
-	{
-        if (!vars.TryFindOffsets(game))
-            return false;
-	}
-    else if (vars.watchers.Count == 0)
-        return false;
-    
     vars.watchers.UpdateAll(game);
 }
 
@@ -189,6 +181,11 @@ split
             }
         }
     }
+}
+
+exit
+{
+    refreshRate = 0.5;
 }
 
 shutdown

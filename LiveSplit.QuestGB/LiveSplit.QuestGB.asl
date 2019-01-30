@@ -24,7 +24,7 @@ startup
     settings.Add("Mammon", true, "Mammon");
     //-------------------------------------------------------------//
 
-    vars.stopwatch = new Stopwatch();
+    refreshRate = 0.5;
 
     vars.timer_OnStart = (EventHandler)((s, e) =>
     {
@@ -97,15 +97,10 @@ startup
                 vars.watchers = new MemoryWatcherList { new MemoryWatcher<byte>(new DeepPointer((int)(romOffset - baseAddress), 0x14A)) { Name = "version" } };
                 vars.watchers.UpdateAll(proc);
                 vars.watchers.AddRange(vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress)));
-                vars.stopwatch.Reset();
                 
                 return true;
             }
-            else
-                vars.stopwatch.Restart();
         }
-        else
-            vars.stopwatch.Reset();
 
         return false;
     });
@@ -206,19 +201,14 @@ init
     vars.watchers = new MemoryWatcherList();
     vars.splits = new Dictionary<string, Dictionary<string, int>>();
 
-    vars.stopwatch.Restart();
+    if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
+        throw new Exception("Emulated memory not yet initialized.");
+    else
+        refreshRate = 200/3.0;
 }
 
 update
 {
-	if (vars.stopwatch.ElapsedMilliseconds > 1500)
-	{
-        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
-            return false;
-	}
-    else if (vars.watchers.Count == 0)
-        return false;
-    
     vars.watchers["version"].Update(game);
     if (vars.watchers["version"].Changed)
         vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress);
@@ -257,6 +247,11 @@ split
             }
         }
     }
+}
+
+exit
+{
+    refreshRate = 0.5;
 }
 
 shutdown

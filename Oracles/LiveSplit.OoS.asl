@@ -42,7 +42,7 @@ startup
     settings.Add("l1Sword", true, "Sword (L1)");
     //-------------------------------------------------------------//
 
-    vars.stopwatch = new Stopwatch();
+    refreshRate = 0.5;
 
     vars.timer_OnStart = (EventHandler)((s, e) =>
     {
@@ -99,15 +99,10 @@ startup
                 print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
                 vars.watchers = vars.GetWatcherList((int)(wramOffset - baseAddress));
-                vars.stopwatch.Reset();
 
                 return true;
             }
-            else
-                vars.stopwatch.Restart();
         }
-        else
-            vars.stopwatch.Reset();
 
         return false;
     });
@@ -190,19 +185,14 @@ init
     vars.watchers = new MemoryWatcherList();
     vars.splits = new Dictionary<string, Dictionary<string, int>>();
 
-    vars.stopwatch.Restart();
+    if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
+        throw new Exception("Emulated memory not yet initialized.");
+    else
+        refreshRate = 200/3.0;
 }
 
 update
 {
-	if (vars.stopwatch.ElapsedMilliseconds > 1500)
-	{
-        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
-            return false;
-	}
-    else if (vars.watchers.Count == 0)
-        return false;
-    
     vars.watchers.UpdateAll(game);
 }
 
@@ -242,6 +232,11 @@ split
             }
         }
     }
+}
+
+exit
+{
+    refreshRate = 0.5;
 }
 
 shutdown

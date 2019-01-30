@@ -7,7 +7,7 @@ state("emuhawk") {}
 
 startup
 {
-    vars.stopwatch = new Stopwatch();
+    refreshRate = 0.5;
 
     vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
     {
@@ -58,15 +58,10 @@ startup
                 print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
                 vars.watchers = vars.GetWatcherList((int)(wramOffset - baseAddress));
-                vars.stopwatch.Reset();
                 
                 return true;
             }
-            else
-                vars.stopwatch.Restart();
         }
-        else
-            vars.stopwatch.Reset();
 
         return false;
     });
@@ -101,19 +96,14 @@ init
 {
     vars.watchers = new MemoryWatcherList();
 
-    vars.stopwatch.Restart();
+    if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
+        throw new Exception("Emulated memory not yet initialized.");
+    else
+        refreshRate = 200/3.0;
 }
 
 update
 {
-	if (vars.stopwatch.ElapsedMilliseconds > 1500)
-	{
-        if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
-            return false;
-	}
-    else if (vars.watchers.Count == 0)
-        return false;
-    
     vars.watchers.UpdateAll(game);
 }
 
@@ -135,4 +125,9 @@ split
     var finalBoss = vars.watchers["RudyHP"].Old == 0x01 && vars.watchers["RudyHP"].Current == 0x00;
 
     return levelClear || finalBoss;
+}
+
+exit
+{
+    refreshRate = 0.5;
 }
