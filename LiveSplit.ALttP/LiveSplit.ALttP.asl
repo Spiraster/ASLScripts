@@ -49,6 +49,9 @@ init
 		if (memory.ProcessName.ToLower().Contains("snes9x"))
 			memoryOffset = memory.ReadValue<int>((IntPtr)memoryOffset);
 
+    if (memoryOffset == 0)
+        throw new Exception("Memory not yet initialized.");
+
 	vars.watchers = new MemoryWatcherList
 	{
 		new MemoryWatcher<ushort>((IntPtr)memoryOffset + 0x221) { Name = "fileSelect" },
