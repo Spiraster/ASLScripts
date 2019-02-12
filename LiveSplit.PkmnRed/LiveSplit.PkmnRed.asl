@@ -1,5 +1,6 @@
 state("gambatte") {}
 state("gambatte_qt") {}
+state("gambatte_qt_nonpsr") {}
 
 startup
 {
