@@ -34,14 +34,13 @@ startup
     settings.Add("exitVictoryRoad", true, "Exit Victory Road");
     settings.Add("hm02", true, "Obtain HM02");
     settings.Add("flute", true, "Obtain Poké Flute");
-    settings.Add("hofGlitchless", true, "HoF Fade Out (Glitchless)");
+    settings.Add("hof", true, "HoF Fade Out");
 
     settings.CurrentDefaultParent = "nsc";
     settings.Add("deathfly", false, "Deathfly");
     settings.Add("bc1", false, "Bug Catcher #1");
     settings.Add("bc2", false, "Bug Catcher #2");
     settings.Add("bc3", false, "Bug Catcher #3");
-    settings.Add("hofNSC", false, "HoF Fade Out (NSC)");
     //-------------------------------------------------------------//
 
     refreshRate = 0.5;
@@ -70,7 +69,7 @@ startup
             var wramOffset = scanOffset - 0x10;
             print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
-            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000), (IntPtr)(scanOffset + 0x147C), (IntPtr)(scanOffset + 1443));
+            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000), (IntPtr)(scanOffset + 0x147C), (IntPtr)(scanOffset + 0x1443));
 
             return true;
         }
@@ -83,6 +82,7 @@ startup
         return new MemoryWatcherList
         {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0001)) { Name = "soundID" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0490)) { Name = "hofTile" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0C26)) { Name = "cursorIndex" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0D40)) { Name = "hofPlayerShown" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0FD8)) { Name = "enemyPkmn" },
@@ -129,13 +129,12 @@ startup
             { "exitVictoryRoad", new Dictionary<string, uint> { { "mapIndex", 0x22u }, { "playerPos", 0x0E1Fu } } },
             { "hm02", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0xBCu } } },
             { "flute", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0x95u } } },
-            { "hofGlitchless", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "hofFade", 0x0108u } } },
+            { "hof", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "hofTile", 0x79u }, { "rBGP", 0u } } },
 
             { "deathfly", new Dictionary<string, uint> { { "mapIndex", 0x33u }, { "playerPos", 0x0112u }, { "pkmnHP", 0u }, { "stack", 0x0939u } } },
             { "bc1", new Dictionary<string, uint> { { "pkmnEXP", 0xE000u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "bc2", new Dictionary<string, uint> { { "pkmnEXP", 0x4301u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "bc3", new Dictionary<string, uint> { { "mapIndex", 0x33u }, { "playerPos", 0x1D21u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "hofNSC", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "rBGP", 0 } } },
         };
     });
 }
