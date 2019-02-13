@@ -70,7 +70,7 @@ startup
             var wramOffset = scanOffset - 0x10;
             print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
 
-            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000), (IntPtr)(scanOffset + 0x147C));
+            vars.watchers = vars.GetWatcherList((int)(wramOffset - 0x400000), (IntPtr)(scanOffset + 0x147C), (IntPtr)(scanOffset + 1443));
 
             return true;
         }
@@ -78,7 +78,7 @@ startup
         return false;
     });
 
-    vars.GetWatcherList = (Func<int, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset) =>
+    vars.GetWatcherList = (Func<int, IntPtr, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset, rBGP) =>
     {   
         return new MemoryWatcherList
         {
@@ -96,9 +96,9 @@ startup
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1361)) { Name = "playerPos" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FD7)) { Name = "hofFade" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FFD)) { Name = "stack" },
-            new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1FBF)) { Name = "stack2" },
 
             new MemoryWatcher<byte>(hramOffset + 0x34) { Name = "input" },
+            new MemoryWatcher<byte>(rBGP) { Name = "rBGP" },
         };
     });
 
@@ -135,7 +135,7 @@ startup
             { "bc1", new Dictionary<string, uint> { { "pkmnEXP", 0xE000u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "bc2", new Dictionary<string, uint> { { "pkmnEXP", 0x4301u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "bc3", new Dictionary<string, uint> { { "mapIndex", 0x33u }, { "playerPos", 0x1D21u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "hofNSC", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "stack2", 0x0108u } } },
+            { "hofNSC", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "rBGP", 0 } } },
         };
     });
 }
