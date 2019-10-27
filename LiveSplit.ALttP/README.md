@@ -2,9 +2,10 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **The Legend of Zelda: A Link to the Past** on emulator.
 
 ### Supported emulators:
-- higan v102+
-- Snes9x 1.53+
-- BizHawk 2.3+ (w/ BSNES core)
+- bsnes v107+
+- higan v106
+- Snes9x(-rr) 1.60
+- BizHawk 2.3+ (w/ bsnes core)
 
 ## Features
 - Automatically start the timer when you select a file
