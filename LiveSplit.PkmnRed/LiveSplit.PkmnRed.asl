@@ -11,6 +11,7 @@ startup
 
     settings.CurrentDefaultParent = "battles";
     settings.Add("nidoran", true, "Catch 2nd Pokemon (Nidoran/Spearow)");
+    settings.Add("route3", false, "Route 3 Last Bug Catcher");
     settings.Add("silphGiovanni", true, "Silph Co. (Giovanni)");
     settings.Add("nuggetBridge", true, "Nugget Bridge (Rocket)");
     settings.Add("gym1", true, "Pewter Gym (Brock)");
@@ -51,7 +52,7 @@ startup
     });
     timer.OnStart += vars.timer_OnStart;
 
-    vars.TryFindOffsets = (Func<Process, bool>)((proc) => 
+    vars.TryFindOffsets = (Func<Process, bool>)((proc) =>
     {
         print("[Autosplitter] Scanning memory");
         var target = new SigScanTarget(0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05 00 00");
@@ -78,7 +79,7 @@ startup
     });
 
     vars.GetWatcherList = (Func<int, IntPtr, IntPtr, MemoryWatcherList>)((wramOffset, hramOffset, rBGP) =>
-    {   
+    {
         return new MemoryWatcherList
         {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x0001)) { Name = "soundID" },
@@ -89,6 +90,7 @@ startup
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x0FDA)) { Name = "enemyPkmnName" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1016)) { Name = "pkmnHP" },
             new MemoryWatcher<uint>(new DeepPointer(wramOffset, 0x104A)) { Name = "opponentName" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x105D)) { Name = "opponentTrainerNo" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1163)) { Name = "partyCount" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x117A)) { Name = "pkmnEXP" },
             new MemoryWatcher<ushort>(new DeepPointer(wramOffset, 0x1359)) { Name = "playerID" },
@@ -107,6 +109,7 @@ startup
         return new Dictionary<string, Dictionary<string, uint>>
         {
             { "nidoran", new Dictionary<string, uint> { { "partyCount", 2u }, { "stack", 0x03AEu } } },
+            { "route3", new Dictionary<string, uint> { { "opponentName", 0x7F869481 }, { "opponentTrainerNo", 6u }, { "enemyPkmn", 0u }, {"stack", 0x03AEu } } },
             { "nuggetBridge", new Dictionary<string, uint> { { "opponentName", 0x8A828E91 }, { "mapIndex", 0x23u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "silphGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xEBu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym1", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
