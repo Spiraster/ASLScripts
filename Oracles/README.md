@@ -2,9 +2,9 @@
 These are [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) scripts for **The Legend of Zelda: Oracle of Ages** and **The Legend of Zelda: Oracle of Seasons** on emulator.
 
 ### Supported emulators:
-- BGB 1.5.7
-- Gambatte-Speedrun r664
-- BizHawk 2.3.2 (w/ Gambatte core)
+- [BGB 1.5.2+](http://bgb.bircd.org)
+- [Gambatte-Speedrun r600+](https://github.com/pokemon-speedrunning/gambatte-speedrun/releases)
+- [BizHawk 2.3.2+](http://tasvideos.org/BizHawk/ReleaseHistory.html) (w/ Gambatte core)
 
 ## Features
 - Automatically start the timer when you select a file
@@ -26,5 +26,5 @@ Here you can enable/disable the options for auto start and auto splitting. If au
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- Twitch: https://www.twitch.tv/spiraster
 - Oracles Community Discord: https://discord.gg/dTmbSNQ
+- Twitch: https://www.twitch.tv/spiraster

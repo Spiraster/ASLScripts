@@ -2,9 +2,9 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **The Legend of Zelda: Link's Awakening** (GB) and **The Legend of Zelda: Link's Awakening DX** (GBC) on emulator.
 
 ### Supported emulators:
-- BGB 1.5.7
-- Gambatte-Speedrun r664
-- BizHawk 2.3.2 (w/ Gambatte core)
+- [BGB 1.5.2+](http://bgb.bircd.org)
+- [Gambatte-Speedrun r600+](https://github.com/pokemon-speedrunning/gambatte-speedrun/releases)
+- [BizHawk 2.3.2+](http://tasvideos.org/BizHawk/ReleaseHistory.html) (w/ Gambatte core)
 
 ## Features
 - Automatically start the timer when you select a file
@@ -32,5 +32,5 @@ If you are playing LA, the autosplitter will instead split upon leaving the dung
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- Twitch: https://www.twitch.tv/spiraster
 - LA/DX Community Discord: https://discord.gg/EARy4Eb
+- Twitch: https://www.twitch.tv/spiraster

@@ -2,9 +2,9 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **Wario Land 3** on emulator.
 
 ### Supported emulators:
-- BGB 1.5.7
-- Gambatte-Speedrun r664
-- BizHawk 2.3.2 (w/ Gambatte core)
+- [BGB 1.5.2+](http://bgb.bircd.org)
+- [Gambatte-Speedrun r600+](https://github.com/pokemon-speedrunning/gambatte-speedrun/releases)
+- [BizHawk 2.3.2+](http://tasvideos.org/BizHawk/ReleaseHistory.html) (w/ Gambatte core)
 
 ## Features
 - Automatically start the timer when you select the language for a new game
@@ -27,5 +27,5 @@ Here you can enable/disable the options for auto start, auto reset, and auto spl
 
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
-- Twitch: https://www.twitch.tv/spiraster
 - Wario Community Discord: https://discord.gg/BUkJWTR
+- Twitch: https://www.twitch.tv/spiraster
