@@ -3,6 +3,7 @@ state("bgb64") {}
 state("gambatte") {}
 state("gambatte_qt") {}
 state("gambatte_qt_nonpsr") {}
+state("gambatte_speedrun") {}
 state("emuhawk") {}
 
 startup
@@ -13,10 +14,10 @@ startup
     {
         var states = new Dictionary<int, int>
         {
-            { 1769472, 0x56CF14 },  //BGB 1.5.7
-            { 4632576, 0x803100 },  //BGB 1.5.7 (x64)
-            { 14544896, 0 },        //GSR r664
-            { 6938624, 0 },         //BizHawk 2.3.2
+            { 1744896, 0x566640 },  //BGB 1.5.8
+            { 4702208, 0x81EBB8 },  //BGB 1.5.8 (x64)
+            { 14569472, 0 },        //GSR r717
+            { 5406720, 0 },         //BizHawk 2.3.3/2.4.0
         };
 
         int ptrOffset;
