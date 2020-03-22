@@ -6,8 +6,7 @@ state("gambatte_qt_nonpsr") {}
 state("gambatte_speedrun") {}
 state("emuhawk") {}
 
-startup
-{
+startup {
     //-------------------------------------------------------------//
     settings.Add("entrances", true, "Dungeon Entrances");
     settings.Add("instruments", true, "Dungeon Ends (Instruments)");
@@ -72,32 +71,24 @@ startup
 
     refreshRate = 0.5;
 
-    vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => 
-    {
+    vars.TryFindOffsets = (Func<Process, int, long, bool>)((proc, memorySize, baseAddress) => {
         long romOffset = 0;
         long wramOffset = 0;
         string state = proc.ProcessName.ToLower();
-        if (state.Contains("gambatte"))
-        {
+        if (state.Contains("gambatte")) {
             IntPtr scanOffset = vars.SigScan(proc, 0, "20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 20 ?? ?? ?? 05 00 00");
             romOffset = (long)scanOffset - 0x18;
             wramOffset = (long)scanOffset - 0x10;
-        }
-        else if (state == "emuhawk")
-        {
+        } else if (state == "emuhawk") {
             IntPtr scanOffset = vars.SigScan(proc, 0, "05 00 00 00 ?? 00 00 00 00 ?? ?? 00 ?? 40 ?? 00 00 ?? ?? 00 00 00 00 00 ?? 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? 00 ?? 00 00 00 00 00 ?? 00 ?? 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F8 00 00 00");
             romOffset = (long)scanOffset - 0x50;
             wramOffset = (long)scanOffset - 0x40;
-        }
-        else if (state == "bgb")
-        {
+        } else if (state == "bgb") {
             IntPtr scanOffset = vars.SigScan(proc, 12, "6D 61 69 6E 6C 6F 6F 70 83 C4 F4 A1 ?? ?? ?? ??");
             var sharedOffset = new DeepPointer(scanOffset, 0, 0, 0x34).Deref<int>(proc);
             romOffset = sharedOffset + 0x10;
             wramOffset = sharedOffset + 0x108;
-        }
-        else if (state == "bgb64")
-        {
+        } else if (state == "bgb64") {
             IntPtr scanOffset = vars.SigScan(proc, 20, "48 83 EC 28 48 8B 05 ?? ?? ?? ?? 48 83 38 00 74 1A 48 8B 05 ?? ?? ?? ?? 48 8B 00 80 B8 ?? ?? ?? ?? 00 74 07");
             IntPtr baseOffset = scanOffset + proc.ReadValue<int>(scanOffset) + 4;
             var sharedOffset = new DeepPointer(baseOffset, 0, 0x44).Deref<int>(proc);
@@ -105,60 +96,50 @@ startup
             wramOffset = sharedOffset + 0x190;
         }
 
-        if (proc.ReadValue<int>((IntPtr)romOffset) != 0)
-        {
+        if (proc.ReadValue<int>((IntPtr)romOffset) != 0) {
+            vars.watchers = vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress));
+            vars.GetSplitList(); //calling now will prevent lag on first timer start
+
+            vars.watchers["version"].Update(proc);
+            print(string.Format("[Autosplitter] Game Version: {0}", (vars.watchers["version"].Current == 0x80) ? "LADX" : "LA"));
             print("[Autosplitter] ROM Pointer: " + romOffset.ToString("X8"));
             print("[Autosplitter] WRAM Pointer: " + wramOffset.ToString("X8"));
             
-            vars.watchers = vars.GetWatcherList((int)(romOffset - baseAddress), (int)(wramOffset - baseAddress));
-            vars.watchers["version"].Update(proc);
-            print(string.Format("[Autosplitter] Game Version: {0}", (vars.watchers["version"].Current == 0x80) ? "LADX" : "LA"));
-            
-            vars.GetSplitList(); //calling now will prevent lag on first timer start
-
             return true;
         }
         
         return false;
     });
 
-    vars.SigScan = (Func<Process, int, string, IntPtr>)((proc, offset, signature) =>
-    {
-        print("[Autosplitter] Scanning memory");
-
+    vars.SigScan = (Func<Process, int, string, IntPtr>)((proc, offset, signature) => {
         var target = new SigScanTarget(offset, signature);
         IntPtr result = IntPtr.Zero;
-        foreach (var page in proc.MemoryPages(true))
-        {
+        foreach (var page in proc.MemoryPages(true)) {
             var scanner = new SignatureScanner(proc, page.BaseAddress, (int)page.RegionSize);
-            if ((result = scanner.Scan(target)) != IntPtr.Zero)
+            if ((result = scanner.Scan(target)) != IntPtr.Zero) {
                 break;
+            }
         }
 
         return result;
     });
 
-    vars.Current = (Func<string, int, bool>)((name, value) => 
-    {
+    vars.Current = (Func<string, int, bool>)((name, value) => {
         return vars.watchers[name].Current == value;
     });
 
-    vars.Changed = (Func<string, int, bool>)((name, value) => 
-    {
+    vars.Changed = (Func<string, int, bool>)((name, value) => {
         return vars.watchers[name].Changed && vars.watchers[name].Current == value;
     });
 
-    vars.Instrument = (Func<int, bool>)((index) => 
-    {
+    vars.Instrument = (Func<int, bool>)((index) => {
         var flags = vars.watchers["dungeonFlags"].Current;
         var dungeon = BitConverter.GetBytes(flags)[index];
         return ((dungeon >> 1) & 1) == 1;
     });
 
-    vars.GetWatcherList = (Func<int, int, MemoryWatcherList>)((romOffset, wramOffset) =>
-    {
-        return new MemoryWatcherList
-        {
+    vars.GetWatcherList = (Func<int, int, MemoryWatcherList>)((romOffset, wramOffset) => {
+        return new MemoryWatcherList {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x03B0)) { Name = "objectState" },
             new MemoryWatcher<long>(new DeepPointer(wramOffset, 0x1B65)) { Name = "dungeonFlags" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B54)) { Name = "overworldScreen" },
@@ -184,10 +165,8 @@ startup
         };
     });
 
-    vars.GetSplitList = (Func<Dictionary<string, bool>>)(() =>
-    {
-        var splits = new Dictionary<string, bool>
-        {
+    vars.GetSplitList = (Func<Dictionary<string, bool>>)(() => {
+        var splits = new Dictionary<string, bool> {
             { "d1Enter", vars.Current("submapScreen", 0x3B) && vars.Current("overworldScreen", 0xD3) },
             { "d2Enter", vars.Current("submapIndex", 0x01) && vars.Current("submapScreen", 0x3A) },
             { "d3Enter", vars.Current("submapIndex", 0x02) && vars.Current("submapScreen", 0x39) },
@@ -231,8 +210,7 @@ startup
             { "creditsWarp", vars.Current("gameState", 0x0101) },
         };
 
-        if (vars.watchers["version"].Current == 0) //LA
-        {
+        if (vars.watchers["version"].Current == 0) { //LA
             splits.Add("d1End", vars.Current("music", 0x05) && vars.Instrument(0));
             splits.Add("d2End", vars.Current("music", 0x05) && vars.Instrument(1));
             splits.Add("d3End", vars.Current("music", 0x05) && vars.Instrument(2));
@@ -241,9 +219,7 @@ startup
             splits.Add("d6End", vars.Current("music", 0x05) && vars.Instrument(5));
             splits.Add("d7End", vars.Current("music", 0x06) && vars.Instrument(6));
             splits.Add("d8End", vars.Current("music", 0x06) && vars.Instrument(7));
-        }
-        else if (vars.watchers["version"].Current == 0x80) //LADX
-        {
+        } else if (vars.watchers["version"].Current == 0x80) { //LADX
             splits.Add("d1End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x00));
             splits.Add("d2End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x01));
             splits.Add("d3End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x02));
@@ -258,43 +234,38 @@ startup
     });
 }
 
-init
-{
+init {
     vars.watchers = new MemoryWatcherList();
     vars.pastSplits = new HashSet<string>();
 
-    if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress))
-        throw new Exception("Emulated memory not yet initialized.");
-    else
+    if (!vars.TryFindOffsets(game, modules.First().ModuleMemorySize, (long)modules.First().BaseAddress)) {
+        throw new Exception("[Autosplitter] Emulated memory not yet initialized.");
+    } else {
         refreshRate = 200/3.0;
+    }
 }
 
-update
-{
-    if (timer.CurrentPhase == TimerPhase.NotRunning && vars.pastSplits.Count > 0)
+update {
+    if (timer.CurrentPhase == TimerPhase.NotRunning && vars.pastSplits.Count > 0) {
         vars.pastSplits.Clear();
+    }
     
     vars.watchers.UpdateAll(game);
 }
 
-start
-{
+start {
     return vars.watchers["gameState"].Current == 0x0902;
 }
 
-reset
-{
+reset {
     return vars.watchers["resetCheck"].Current > 0;
 }
 
-split
-{
+split {
     var splits = vars.GetSplitList();
 
-    foreach (var split in splits)
-    {
-        if (settings[split.Key] && split.Value && !vars.pastSplits.Contains(split.Key))
-        {
+    foreach (var split in splits) {
+        if (settings[split.Key] && split.Value && !vars.pastSplits.Contains(split.Key)) {
             vars.pastSplits.Add(split.Key);
             print("[Autosplitter] Split: " + split.Key);
             return true;
@@ -302,7 +273,6 @@ split
     }
 }
 
-exit
-{
+exit {
     refreshRate = 0.5;
 }

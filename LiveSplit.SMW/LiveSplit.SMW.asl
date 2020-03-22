@@ -4,8 +4,7 @@ state("bsnes") {}
 state("higan") {}
 state("emuhawk") {}
 
-startup
-{
+startup {
     settings.Add("levels", true, "Normal Levels");
     settings.SetToolTip("levels", "Split on crossing goal tapes and activating keyholes");
     settings.Add("bosses", true, "Boss Levels");
@@ -20,10 +19,8 @@ startup
     settings.SetToolTip("bowserPhase", "Split on the transition between Bowser's phases (not tested on Cloud runs)");
 }
 
-init
-{
-    var states = new Dictionary<int, long>
-    {
+init {
+    var states = new Dictionary<int, long> {
         { 9646080, 0x97EE04 },      // Snes9x-rr 1.60
         { 13565952, 0x140925118 },  // Snes9x-rr 1.60 (x64)
         { 9027584, 0x94DB54 },      // Snes9x 1.60
@@ -42,15 +39,17 @@ init
     };
 
     long memoryOffset;
-    if (states.TryGetValue(modules.First().ModuleMemorySize, out memoryOffset))
-        if (memory.ProcessName.ToLower().Contains("snes9x"))
+    if (states.TryGetValue(modules.First().ModuleMemorySize, out memoryOffset)) {
+        if (memory.ProcessName.ToLower().Contains("snes9x")) {
             memoryOffset = memory.ReadValue<int>((IntPtr)memoryOffset);
+        }
+    }
 
-    if (memoryOffset == 0)
+    if (memoryOffset == 0) {
         throw new Exception("Memory not yet initialized.");
+    }
 
-    vars.watchers = new MemoryWatcherList
-    {
+    vars.watchers = new MemoryWatcherList {
         new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x1ED2) { Name = "fileSelect" },
         new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x906) { Name = "fanfare" },
         new MemoryWatcher<short>((IntPtr)memoryOffset + 0x1434) { Name = "keyholeTimer" },
@@ -66,23 +65,19 @@ init
     };
 }
 
-update
-{
+update {
     vars.watchers.UpdateAll(game);
 }
 
-start
-{
+start {
     return vars.watchers["fileSelect"].Old == 0 && vars.watchers["fileSelect"].Current == 1;
 }
 
-reset
-{
+reset {
     return vars.watchers["fileSelect"].Old != 0 && vars.watchers["fileSelect"].Current == 0;
 }
 
-split
-{
+split {
     var goalExit = settings["levels"] && vars.watchers["fanfare"].Old == 0 && vars.watchers["fanfare"].Current == 1 && vars.watchers["bossDefeat"].Current == 0;
     var keyExit = settings["levels"] && vars.watchers["keyholeTimer"].Old == 0 && vars.watchers["keyholeTimer"].Current == 0x0030;
     

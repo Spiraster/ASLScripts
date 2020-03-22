@@ -4,8 +4,7 @@ state("bsnes") {}
 state("higan") {}
 state("emuhawk") {}
 
-startup
-{
+startup {
     settings.Add("escape", true, "Escape");
     settings.Add("pendants", true, "Pendants (sword up)");
     settings.Add("masterSword", false, "Master Sword");
@@ -15,10 +14,8 @@ startup
     settings.Add("end", true, "Enter Triforce Room");
 }
 
-init
-{
-    var states = new Dictionary<int, long>
-    {
+init {
+    var states = new Dictionary<int, long> {
         { 9646080, 0x97EE04 },      // Snes9x-rr 1.60
         { 13565952, 0x140925118 },  // Snes9x-rr 1.60 (x64)
         { 9027584, 0x94DB54 },      // Snes9x 1.60
@@ -37,15 +34,17 @@ init
     };
 
     long memoryOffset;
-    if (states.TryGetValue(modules.First().ModuleMemorySize, out memoryOffset))
-        if (memory.ProcessName.ToLower().Contains("snes9x"))
+    if (states.TryGetValue(modules.First().ModuleMemorySize, out memoryOffset)) {
+        if (memory.ProcessName.ToLower().Contains("snes9x")) {
             memoryOffset = memory.ReadValue<int>((IntPtr)memoryOffset);
+        }
+    }
 
-    if (memoryOffset == 0)
+    if (memoryOffset == 0) {
         throw new Exception("Memory not yet initialized.");
+    }
 
-    vars.watchers = new MemoryWatcherList
-    {
+    vars.watchers = new MemoryWatcherList {
         new MemoryWatcher<ushort>((IntPtr)memoryOffset + 0x221) { Name = "fileSelect" },
         new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x354) { Name = "linkState" },
         new MemoryWatcher<short>((IntPtr)memoryOffset + 0x0A0) { Name = "mapTile" },
@@ -58,26 +57,23 @@ init
       vars.lastItem = 0;
 }
 
-update
-{
+update {
     vars.watchers.UpdateAll(game);
 
-    if (vars.watchers["itemValue"].Changed && vars.watchers["itemValue"].Current != 0)
+    if (vars.watchers["itemValue"].Changed && vars.watchers["itemValue"].Current != 0) {
         vars.lastItem = vars.watchers["itemValue"].Current;
+    }
 }
 
-start
-{
+start {
     return vars.watchers["fileSelect"].Old == 0 && vars.watchers["fileSelect"].Current == 0xFFFF;
 }
 
-reset
-{
+reset {
     return vars.watchers["fileSelect"].Old == 0xFFFF && vars.watchers["fileSelect"].Current != 0xFFFF;
 }
 
-split
-{
+split {
     var swordUp = vars.watchers["linkState"].Changed && vars.watchers["linkState"].Current == 0x24;
 
     var escape = settings["escape"] && vars.watchers["yPos"].Current > vars.watchers["yPos"].Old && vars.watchers["yPos"].Current == 0x0218 && vars.watchers["mapTile"].Current == 0x0012; //old.yPos == 0x01 && current.yPos == 0x02 && current.world == 0x0A && current.mapTile == 0x36;
