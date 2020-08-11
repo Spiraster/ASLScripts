@@ -220,7 +220,7 @@ startup {
             splits.Add("d7End", vars.Current("music", 0x06) && vars.Instrument(6));
             splits.Add("d8End", vars.Current("music", 0x06) && vars.Instrument(7));
         } else if (vars.watchers["version"].Current == 0x80) { //LADX
-            splits.Add("d1End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x00));
+            splits.Add("d1End", vars.Current("music", 0x0B) && vars.Current("submapScreen", 0x16) && vars.Current("overworldScreen", 0xD3));
             splits.Add("d2End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x01));
             splits.Add("d3End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x02));
             splits.Add("d4End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x03));
