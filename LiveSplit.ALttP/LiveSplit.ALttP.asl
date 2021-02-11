@@ -28,9 +28,10 @@ init {
         { 131543040, 0xA9BD5C },    // bsnes v110
         { 51924992, 0xA9DD5C },     // bsnes v111
         { 52056064, 0xAAED7C },     // bsnes v112
-        { 7061504, 0x36F11500240 }, // BizHawk 2.3
+        { 7061504, 0x36F11500240 }, // BizHawk 2.3.0
         { 7249920, 0x36F11500240 }, // BizHawk 2.3.1
         { 6938624, 0x36F11500240 }, // BizHawk 2.3.2
+        { 4538368, 0x36F05F94040 }, // BizHawk 2.6.0
     };
 
     long memoryOffset;
