@@ -25,4 +25,4 @@ Here you can enable/disable the options for auto start, auto reset, and auto spl
 ## Contact
 If you encounter any issues or have any feature requests, please let me know! :)
 - Twitch: https://www.twitch.tv/spiraster
-- Pokemon Community Discord: https://discord.gg/0UUw8zDe2hWlwRsm
+- Pokemon Gen 1-3 Community Discord: https://discord.gg/5qqmmAk
