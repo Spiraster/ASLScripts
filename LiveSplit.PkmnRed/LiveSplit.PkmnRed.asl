@@ -29,6 +29,7 @@ startup {
     settings.Add("elite4_5", true, "Champion");
 
     settings.CurrentDefaultParent = "other";
+    settings.Add("rivalTile", false, "Walk on tile for Rival 1 fight");
     settings.Add("rival", false, "Leave Oak's Lab (after rival fight)");
     settings.Add("route3_sv", false, "Route 3 (Save)");
     settings.Add("enterMtMoon", true, "Enter Mt. Moon");
@@ -120,6 +121,7 @@ startup {
             { "elite4_4", new Dictionary<string, uint> { { "opponentName", 0x828D808B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0x71u }
             { "elite4_5", new Dictionary<string, uint> { { "enemyPkmnName", 0x948D8495 }, { "mapIndex", 0x78u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
 
+            { "rivalTile", new Dictionary<string, uint> { { "mapIndex", 0x28u }, { "soundID", 0xDEu } } },
             { "rival", new Dictionary<string, uint> { { "mapIndex", 0u }, { "partyCount", 1u } } },
             { "route3_sv", new Dictionary<string, uint> { { "mapIndex", 0x0Eu }, { "playerPos", 0x1B0Bu }, { "topCursorPos", 0x0108u }, {"input", 0x01u } } }, //{ "stack", 0x0499u }, { "cursorIndex", 0 }
             { "enterMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x3Bu }, { "playerPos", 0x0E23u } } },
