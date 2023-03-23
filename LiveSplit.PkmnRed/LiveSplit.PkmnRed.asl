@@ -12,6 +12,7 @@ startup {
     settings.CurrentDefaultParent = "battles";
     settings.Add("nidoran", true, "Catch 2nd Pokemon (Nidoran/Spearow)");
     settings.Add("route3_bc", false, "Route 3 (BC3)");
+    settings.Add("hideoutGiovanni", false, "Hideout (Giovanni)");
     settings.Add("silphGiovanni", true, "Silph Co. (Giovanni)");
     settings.Add("nuggetBridge", true, "Nugget Bridge (Rocket)");
     settings.Add("gym1", true, "Pewter Gym (Brock)");
@@ -106,6 +107,7 @@ startup {
             { "nidoran", new Dictionary<string, uint> { { "partyCount", 2u }, { "stack", 0x03AEu } } },
             { "route3_bc", new Dictionary<string, uint> { { "opponentName", 0x7F869481 }, { "opponentTrainerNo", 6u }, { "enemyPkmn", 0u }, {"stack", 0x03AEu } } },
             { "nuggetBridge", new Dictionary<string, uint> { { "opponentName", 0x8A828E91 }, { "mapIndex", 0x23u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "hideoutGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 202 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "silphGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xEBu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym1", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym2", new Dictionary<string, uint> { { "opponentName", 0x9392888C }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
