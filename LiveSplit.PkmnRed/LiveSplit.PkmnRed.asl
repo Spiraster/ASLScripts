@@ -157,7 +157,11 @@ update {
 }
 
 start {
-    return vars.watchers["cursorIndex"].Current == 0 && (vars.watchers["input"].Current & 0x80) == 0 && vars.watchers["playerID"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
+    return vars.watchers["cursorIndex"].Current == 0 && vars.watchers["playerID"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
+}
+
+reset {
+    return vars.watchers["cursorIndex"].Current == 1 && vars.watchers["playerID"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
 }
 
 split {
