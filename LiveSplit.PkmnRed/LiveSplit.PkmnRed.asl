@@ -13,7 +13,7 @@ startup {
     settings.Add("nidoran", true, "Catch 2nd Pokemon (Nidoran/Spearow)");
     settings.Add("route3_bc", false, "Route 3 (BC3)");
     settings.Add("hideoutGiovanni", false, "Hideout (Giovanni)");
-    settings.Add("silphGiovanni", true, "Silph Co. (Giovanni)");
+    settings.Add("silphGiovanni", false, "Silph Co. (Giovanni)");
     settings.Add("nuggetBridge", true, "Nugget Bridge (Rocket)");
     settings.Add("gym1", true, "Pewter Gym (Brock)");
     settings.Add("gym2", true, "Cerulean Gym (Misty)");
@@ -35,7 +35,7 @@ startup {
     settings.Add("route3_sv", false, "Route 3 (Save)");
     settings.Add("enterMtMoon", true, "Enter Mt. Moon");
     settings.Add("exitMtMoon", true, "Exit Mt. Moon");
-    settings.Add("exitVictoryRoad", true, "Exit Victory Road");
+    settings.Add("exitVictoryRoad", false, "Exit Victory Road");
     settings.Add("hm02", true, "Obtain HM02");
     settings.Add("flute", true, "Obtain Poké Flute");
     settings.Add("hof", true, "HoF Fade Out");
