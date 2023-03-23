@@ -5,39 +5,36 @@ state("gambatte_speedrun") {}
 
 startup {
     //-------------------------------------------------------------//
-    settings.Add("battles", true, "Battles");
-    settings.Add("other", true, "Other");
+    settings.Add("glitchless", true, "Glitchless");
     settings.Add("nsc", true, "NSC Only");
 
-    settings.CurrentDefaultParent = "battles";
+    settings.CurrentDefaultParent = "glitchless";
+    settings.Add("rivalTile", false, "Walk on tile for Rival 1 fight");
+    settings.Add("rival", false, "Leave Oak's Lab (after rival fight)");
     settings.Add("nidoran", true, "Catch 2nd Pokemon (Nidoran/Spearow)");
+    settings.Add("brock", true, "Pewter Gym (Brock)");
     settings.Add("route3_bc", false, "Route 3 (BC3)");
-    settings.Add("hideoutGiovanni", false, "Hideout (Giovanni)");
-    settings.Add("silphGiovanni", false, "Silph Co. (Giovanni)");
+    settings.Add("route3_sv", false, "Route 3 (Save)");
+    settings.Add("enterMtMoon", true, "Enter Mt. Moon");
+    settings.Add("exitMtMoon", true, "Exit Mt. Moon");
     settings.Add("nuggetBridge", true, "Nugget Bridge (Rocket)");
-    settings.Add("gym1", true, "Pewter Gym (Brock)");
-    settings.Add("gym2", true, "Cerulean Gym (Misty)");
-    settings.Add("gym3", true, "Vermilion Gym (Lt. Surge)");
-    settings.Add("gym4", true, "Celadon Gym (Erika)");
-    settings.Add("gym5", true, "Fuchsia Gym (Koga)");
-    settings.Add("gym6", true, "Saffron Gym (Sabrina)");
-    settings.Add("gym7", true, "Cinnabar Gym (Blaine)");
-    settings.Add("gym8", true, "Viridian Gym (Giovanni)");
+    settings.Add("misty", true, "Cerulean Gym (Misty)");
+    settings.Add("surge", true, "Vermilion Gym (Lt. Surge)");
+    settings.Add("hm02", true, "Obtain HM02");
+    settings.Add("hideoutGiovanni", false, "Hideout (Giovanni)");
+    settings.Add("flute", true, "Obtain Poké Flute");
+    settings.Add("silphGiovanni", false, "Silph Co. (Giovanni)");
+    settings.Add("koga", true, "Fuchsia Gym (Koga)");
+    settings.Add("erika", true, "Celadon Gym (Erika)");
+    settings.Add("blaine", true, "Cinnabar Gym (Blaine)");
+    settings.Add("sabrina", true, "Saffron Gym (Sabrina)");
+    settings.Add("giovanni", true, "Viridian Gym (Giovanni)");
+    settings.Add("exitVictoryRoad", false, "Exit Victory Road");
     settings.Add("elite4_1", true, "Lorelei");
     settings.Add("elite4_2", true, "Bruno");
     settings.Add("elite4_3", true, "Agatha");
     settings.Add("elite4_4", true, "Lance");
     settings.Add("elite4_5", true, "Champion");
-
-    settings.CurrentDefaultParent = "other";
-    settings.Add("rivalTile", false, "Walk on tile for Rival 1 fight");
-    settings.Add("rival", false, "Leave Oak's Lab (after rival fight)");
-    settings.Add("route3_sv", false, "Route 3 (Save)");
-    settings.Add("enterMtMoon", true, "Enter Mt. Moon");
-    settings.Add("exitMtMoon", true, "Exit Mt. Moon");
-    settings.Add("exitVictoryRoad", false, "Exit Victory Road");
-    settings.Add("hm02", true, "Obtain HM02");
-    settings.Add("flute", true, "Obtain Poké Flute");
     settings.Add("hof", true, "HoF Fade Out");
 
     settings.CurrentDefaultParent = "nsc";
@@ -104,33 +101,32 @@ startup {
 
     vars.GetSplitList = (Func<Dictionary<string, Dictionary<string, uint>>>)(() => {
         return new Dictionary<string, Dictionary<string, uint>> {
+            { "rivalTile", new Dictionary<string, uint> { { "mapIndex", 0x28u }, { "soundID", 0xDEu } } },
+            { "rival", new Dictionary<string, uint> { { "mapIndex", 0u }, { "partyCount", 1u } } },
             { "nidoran", new Dictionary<string, uint> { { "partyCount", 2u }, { "stack", 0x03AEu } } },
+            { "brock", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "route3_bc", new Dictionary<string, uint> { { "opponentName", 0x7F869481 }, { "opponentTrainerNo", 6u }, { "enemyPkmn", 0u }, {"stack", 0x03AEu } } },
+            { "route3_sv", new Dictionary<string, uint> { { "mapIndex", 0x0Eu }, { "playerPos", 0x1B0Bu }, { "topCursorPos", 0x0108u }, {"input", 0x01u } } }, //{ "stack", 0x0499u }, { "cursorIndex", 0 }
+            { "enterMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x3Bu }, { "playerPos", 0x0E23u } } },
+            { "exitMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x0Fu }, { "playerPos", 0x1805u } } },
             { "nuggetBridge", new Dictionary<string, uint> { { "opponentName", 0x8A828E91 }, { "mapIndex", 0x23u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "misty", new Dictionary<string, uint> { { "opponentName", 0x9392888C }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "surge", new Dictionary<string, uint> { { "opponentName", 0x92E8938B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "hm02", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0xBCu } } },
             { "hideoutGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 202 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "flute", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0x95u } } },
             { "silphGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xEBu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym1", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym2", new Dictionary<string, uint> { { "opponentName", 0x9392888C }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym3", new Dictionary<string, uint> { { "opponentName", 0x92E8938B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym4", new Dictionary<string, uint> { { "opponentName", 0x8A889184 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym5", new Dictionary<string, uint> { { "opponentName", 0x80868E8A }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym6", new Dictionary<string, uint> { { "opponentName", 0x91818092 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym7", new Dictionary<string, uint> { { "opponentName", 0x88808B81 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "gym8", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0x2Du }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "koga", new Dictionary<string, uint> { { "opponentName", 0x80868E8A }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "erika", new Dictionary<string, uint> { { "opponentName", 0x8A889184 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "blaine", new Dictionary<string, uint> { { "opponentName", 0x88808B81 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "sabrina", new Dictionary<string, uint> { { "opponentName", 0x91818092 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "giovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0x2Du }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "exitVictoryRoad", new Dictionary<string, uint> { { "mapIndex", 0x22u }, { "playerPos", 0x0E1Fu } } },
             { "elite4_1", new Dictionary<string, uint> { { "opponentName", 0x84918E8B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF5u }
             { "elite4_2", new Dictionary<string, uint> { { "opponentName", 0x8D949181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF6u }
             { "elite4_3", new Dictionary<string, uint> { { "opponentName", 0x93808680 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0xF7u }
             { "elite4_4", new Dictionary<string, uint> { { "opponentName", 0x828D808B }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } }, //{ "mapIndex", 0x71u }
             { "elite4_5", new Dictionary<string, uint> { { "enemyPkmnName", 0x948D8495 }, { "mapIndex", 0x78u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-
-            { "rivalTile", new Dictionary<string, uint> { { "mapIndex", 0x28u }, { "soundID", 0xDEu } } },
-            { "rival", new Dictionary<string, uint> { { "mapIndex", 0u }, { "partyCount", 1u } } },
-            { "route3_sv", new Dictionary<string, uint> { { "mapIndex", 0x0Eu }, { "playerPos", 0x1B0Bu }, { "topCursorPos", 0x0108u }, {"input", 0x01u } } }, //{ "stack", 0x0499u }, { "cursorIndex", 0 }
-            { "enterMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x3Bu }, { "playerPos", 0x0E23u } } },
-            { "exitMtMoon", new Dictionary<string, uint> { { "mapIndex", 0x0Fu }, { "playerPos", 0x1805u } } },
-            { "exitVictoryRoad", new Dictionary<string, uint> { { "mapIndex", 0x22u }, { "playerPos", 0x0E1Fu } } },
-            { "hm02", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0xBCu } } },
-            { "flute", new Dictionary<string, uint> { { "soundID", 0x94u }, { "mapIndex", 0x95u } } },
             { "hof", new Dictionary<string, uint> { { "mapIndex", 0x76u }, { "hofPlayerShown", 1u }, { "hofTile", 0x79u }, { "rBGP", 0u } } },
 
             { "deathfly", new Dictionary<string, uint> { { "mapIndex", 0x33u }, { "playerPos", 0x0112u }, { "pkmnHP", 0u }, { "stack", 0x0939u } } },
