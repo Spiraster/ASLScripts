@@ -107,7 +107,7 @@ startup {
             { "nidoran", new Dictionary<string, uint> { { "partyCount", 2u }, { "stack", 0x03AEu } } },
             { "route3_bc", new Dictionary<string, uint> { { "opponentName", 0x7F869481 }, { "opponentTrainerNo", 6u }, { "enemyPkmn", 0u }, {"stack", 0x03AEu } } },
             { "nuggetBridge", new Dictionary<string, uint> { { "opponentName", 0x8A828E91 }, { "mapIndex", 0x23u }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
-            { "hideoutGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 202 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
+            { "hideoutGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xCAu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "silphGiovanni", new Dictionary<string, uint> { { "opponentName", 0x958E8886 }, { "mapIndex", 0xEBu }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym1", new Dictionary<string, uint> { { "opponentName", 0x828E9181 }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
             { "gym2", new Dictionary<string, uint> { { "opponentName", 0x9392888C }, { "enemyPkmn", 0u }, { "stack", 0x03AEu } } },
@@ -157,7 +157,7 @@ update {
 }
 
 start {
-    return vars.watchers["cursorIndex"].Current == 0 && vars.watchers["playerID"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
+    return vars.watchers["cursorIndex"].Current == 0 && (vars.watchers["input"].Current & 0x80) == 0 && vars.watchers["playerID"].Current == 0 && vars.watchers["stack"].Current == 0x5B91;
 }
 
 reset {
