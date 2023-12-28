@@ -62,6 +62,7 @@ startup {
     settings.Add("shop", false, "Shoplifting");
     settings.Add("marin", false, "Marin");
     settings.Add("walrus", false, "Walrus");
+    settings.Add("d2Exit", false, "Exit D2");
     settings.Add("d8Exit", false, "Exit D8 to Mountaintop");
     settings.Add("song1", false, "Song #1 (Ballad of the Wind Fish)");
     settings.Add("song2", false, "Song #2 (Manbo's Mambo)");
@@ -203,6 +204,7 @@ startup {
             { "shop", vars.Changed("shopThefts", 0x02) && vars.Current("overworldScreen", 0x93) },
             { "marin", vars.Changed("marin", 0x01) && vars.Current("overworldScreen", 0xF5) },
             { "walrus", vars.Current("objectState", 0x05) && vars.Current("overworldScreen", 0xFD) },
+            { "d2Exit", vars.Current("submapScreen", 0x3A) && vars.Current("overworldScreen", 0x24) },
             { "d8Exit", vars.Current("submapScreen", 0x12) && vars.Current("overworldScreen", 0x00) },
             { "song1", vars.Current("music", 0x10) && (vars.Current("overworldScreen", 0xDC) || vars.Current("overworldScreen", 0x92)) },
             { "song2", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0x2A) },
