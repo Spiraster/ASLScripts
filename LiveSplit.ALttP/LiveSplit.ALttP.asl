@@ -8,6 +8,7 @@ startup {
     settings.Add("escape", true, "Escape");
     settings.Add("pendants", true, "Pendants (sword up)");
     settings.Add("masterSword", false, "Master Sword");
+    settings.Add("agaEntry", true, "Agahnim 1 room entry (door close)");
     settings.Add("agahnim1", true, "Agahnim 1 (sword up)");
     settings.Add("crystals", true, "Crystals (sword up)");
     settings.Add("agahnim2", true, "Agahnim 2");
@@ -52,6 +53,7 @@ init {
         new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x2D8) { Name = "itemValue" },
         new MemoryWatcher<byte>((IntPtr)memoryOffset + 0xAA4) { Name = "world" },
         new MemoryWatcher<short>((IntPtr)memoryOffset + 0xFC4) { Name = "yPos" },
+        new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x12F) { Name = "soundEffects2"}, // if == 16 then door thud sfx for aga room door close
         new MemoryWatcher<byte>((IntPtr)memoryOffset + 0x418) { Name = "end" },
     };
 
@@ -81,9 +83,9 @@ split {
     var pendant = settings["pendants"] && swordUp && vars.watchers["world"].Current == 0x0A && (vars.lastItem == 0x37 || vars.lastItem == 0x39 || vars.lastItem == 0x38);
     var crystal = settings["crystals"] && swordUp && vars.watchers["world"].Current == 0x0A && vars.lastItem == 0x20;
     var masterSword = settings["masterSword"] && vars.watchers["linkState"].Changed && vars.watchers["linkState"].Current == 0x17 && vars.watchers["world"].Current == 0x01;
+    var agaEntry = settings["agaEntry"] && vars.watchers["soundEffects2"].Old == 0x16 && vars.watchers["soundEffects2"].Current != 0x16 && vars.watchers["mapTile"].Current == 0x0020;
     var agahnim1 = settings["agahnim1"] && swordUp && vars.watchers["mapTile"].Current == 0x0020;
     var agahnim2 = settings["agahnim2"] && vars.watchers["linkState"].Old == 0x1D && vars.watchers["linkState"].Current == 0 && vars.watchers["mapTile"].Current == 0x000D;
     var end = settings["end"] && vars.watchers["end"].Old == 0 && vars.watchers["end"].Current == 1 && vars.watchers["mapTile"].Current == 0;
-
-    return escape || pendant || crystal || masterSword || agahnim1 || agahnim2 || end;
+    return escape || pendant || crystal || masterSword || agaEntry || agahnim1 || agahnim2 || end;
 }
