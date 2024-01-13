@@ -147,6 +147,7 @@ startup {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1BAE)) { Name = "submapScreen" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B60)) { Name = "submapIndex" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x13CA)) { Name = "music" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x13CB)) { Name = "music2" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x13C8)) { Name = "sound" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1B11)) { Name = "tailKey" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x191D)) { Name = "featherRoom" },
@@ -214,7 +215,7 @@ startup {
 
         if (vars.watchers["version"].Current == 0) { //LA
             splits.Add("d1End", vars.Current("music", 0x05) && vars.Instrument(0));
-            splits.Add("d2End", vars.Current("music", 0x05) && vars.Instrument(1));
+            splits.Add("d2End", vars.Current("music", 0x05) && !vars.Current("music2", 0x15) && vars.Instrument(1));
             splits.Add("d3End", vars.Current("music", 0x05) && vars.Instrument(2));
             splits.Add("d4End", vars.Current("music", 0x05) && vars.Instrument(3));
             splits.Add("d5End", vars.Current("music", 0x05) && vars.Instrument(4));
