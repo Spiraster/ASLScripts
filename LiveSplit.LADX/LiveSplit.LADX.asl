@@ -205,7 +205,7 @@ startup {
             { "shop", vars.Changed("shopThefts", 0x02) && vars.Current("overworldScreen", 0x93) },
             { "marin", vars.Changed("marin", 0x01) && vars.Current("overworldScreen", 0xF5) },
             { "walrus", vars.Current("objectState", 0x05) && vars.Current("overworldScreen", 0xFD) },
-            { "d2Exit", vars.Current("submapScreen", 0x3A) && vars.Current("overworldScreen", 0x24) },
+            { "d2Exit", vars.Current("submapScreen", 0x3A) && vars.Current("overworldScreen", 0x24) && vars.Current("music2", 0x05) },
             { "d8Exit", vars.Current("submapScreen", 0x12) && vars.Current("overworldScreen", 0x00) },
             { "song1", vars.Current("music", 0x10) && (vars.Current("overworldScreen", 0xDC) || vars.Current("overworldScreen", 0x92)) },
             { "song2", vars.Current("music", 0x10) && vars.Current("overworldScreen", 0x2A) },
@@ -214,14 +214,14 @@ startup {
         };
 
         if (vars.watchers["version"].Current == 0) { //LA
-            splits.Add("d1End", vars.Current("music", 0x05) && vars.Instrument(0));
-            splits.Add("d2End", vars.Current("music", 0x05) && !vars.Current("music2", 0x15) && vars.Instrument(1));
-            splits.Add("d3End", vars.Current("music", 0x05) && vars.Instrument(2));
-            splits.Add("d4End", vars.Current("music", 0x05) && vars.Instrument(3));
-            splits.Add("d5End", vars.Current("music", 0x05) && vars.Instrument(4));
-            splits.Add("d6End", vars.Current("music", 0x05) && vars.Instrument(5));
-            splits.Add("d7End", vars.Current("music", 0x06) && vars.Instrument(6));
-            splits.Add("d8End", vars.Current("music", 0x06) && vars.Instrument(7));
+            splits.Add("d1End", vars.Instrument(0) && vars.Current("music", 0x05));
+            splits.Add("d2End", vars.Instrument(1) && vars.Current("music", 0x05) && !vars.Current("music2", 0x15));
+            splits.Add("d3End", vars.Instrument(2) && vars.Current("music", 0x05));
+            splits.Add("d4End", vars.Instrument(3) && vars.Current("music", 0x05));
+            splits.Add("d5End", vars.Instrument(4) && vars.Current("music", 0x05));
+            splits.Add("d6End", vars.Instrument(5) && vars.Current("music", 0x05));
+            splits.Add("d7End", vars.Instrument(6) && vars.Current("music", 0x06));
+            splits.Add("d8End", vars.Instrument(7) && vars.Current("music", 0x06));
         } else if (vars.watchers["version"].Current == 0x80) { //LADX
             splits.Add("d1End", vars.Current("music", 0x0B) && vars.Current("submapScreen", 0x16) && vars.Current("overworldScreen", 0xD3));
             splits.Add("d2End", vars.Current("music", 0x0B) && vars.Current("submapIndex", 0x01));
