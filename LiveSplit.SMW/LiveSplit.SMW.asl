@@ -21,27 +21,36 @@ startup {
 
 init {
     var states = new Dictionary<int, long> {
-        { 9646080, 0x97EE04 },      // Snes9x-rr 1.60
-        { 13565952, 0x140925118 },  // Snes9x-rr 1.60 (x64)
-        { 9027584, 0x94DB54 },      // Snes9x 1.60
-        { 12836864, 0x1408D8BE8 },  // Snes9x 1.60 (x64)
-        { 16019456, 0x94D144 },     // higan v106
-        { 15360000, 0x8AB144 },     // higan v106.112
-        { 10096640, 0x72BECC },     // bsnes v107
-        { 10338304, 0x762F2C },     // bsnes v107.1
-        { 47230976, 0x765F2C },     // bsnes v107.2/107.3
-        { 131543040, 0xA9BD5C },    // bsnes v110
-        { 51924992, 0xA9DD5C },     // bsnes v111
-        { 52056064, 0xAAED7C },     // bsnes v112
-        { 7061504, 0x36F11500240 }, // BizHawk 2.3
-        { 7249920, 0x36F11500240 }, // BizHawk 2.3.1
-        { 6938624, 0x36F11500240 }, // BizHawk 2.3.2
+        { 9646080,   0x97EE04 },      // Snes9x-rr 1.60
+        { 13565952,  0x140925118 },   // Snes9x-rr 1.60 (x64)
+        { 9027584,   0x94DB54 },      // Snes9x 1.60
+        { 12836864,  0x1408D8BE8 },   // Snes9x 1.60 (x64)
+        { 10399744,  0x9B74D0 },      // Snes9x 1.62.3
+        { 15474688,  0x140A62390 },   // Snes9x 1.62.3 (x64)
+        { 16019456,  0x94D144 },      // higan v106
+        { 15360000,  0x8AB144 },      // higan v106.112
+        { 10096640,  0x72BECC },      // bsnes v107
+        { 10338304,  0x762F2C },      // bsnes v107.1
+        { 47230976,  0x765F2C },      // bsnes v107.2/107.3
+        { 131543040, 0xA9BD5C },      // bsnes v110
+        { 51924992,  0xA9DD5C },      // bsnes v111
+        { 52056064,  0xAAED7C },      // bsnes v112
+        { 52477952,  0xB16D7C },      // bsnes v115
+        { 7061504,   0x36F11500240 }, // BizHawk 2.3.0
+        { 7249920,   0x36F11500240 }, // BizHawk 2.3.1
+        { 6938624,   0x36F11500240 }, // BizHawk 2.3.2
+        { 4538368,   0x36F05F94040 }, // BizHawk 2.6.0
     };
 
     long memoryOffset;
     if (states.TryGetValue(modules.First().ModuleMemorySize, out memoryOffset)) {
-        if (memory.ProcessName.ToLower().Contains("snes9x")) {
-            memoryOffset = memory.ReadValue<int>((IntPtr)memoryOffset);
+        var procName = memory.ProcessName.ToLower();
+        if (procName.Contains("snes9x")) {
+            if (procName.Contains("x64")) {
+                memoryOffset = memory.ReadValue<long>((IntPtr)memoryOffset);
+            } else {
+                memoryOffset = memory.ReadValue<int>((IntPtr)memoryOffset);
+            }
         }
     }
 

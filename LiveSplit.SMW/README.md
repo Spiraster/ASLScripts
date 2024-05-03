@@ -2,10 +2,10 @@
 This is a [LiveSplit](http://livesplit.github.io) [ASL](https://github.com/LiveSplit/LiveSplit/blob/master/Documentation/Auto-Splitters.md) script for **Super Mario World** on emulator.
 
 ### Supported emulators:
-- bsnes v107+
+- bsnes v107-112, v115
 - higan v106
-- Snes9x(-rr) 1.60
-- BizHawk 2.3+ (w/ bsnes core)
+- Snes9x 1.60, 1.62.3
+- BizHawk 2.3.x, 2.6.x (w/ bsnes core)
 
 ## Features
 - Automatically start the timer when you select a file
