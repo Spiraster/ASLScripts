@@ -23,7 +23,7 @@ startup {
     settings.Add("d6Entrance", true, "Ancient Ruins (D6)");
     settings.Add("d7Entrance", true, "Explorer's Crypt (D7)");
     settings.Add("d8Entrance", true, "Sword & Shield Maze (D8)");
-    settings.Add("d9Entrance", true, "Onox's Castle");
+    settings.Add("ocEntrance", true, "Onox's Castle");
 
     settings.CurrentDefaultParent = "essences";
     settings.Add("d1Essence", true, "Fertile Soil (D1)");
@@ -40,24 +40,24 @@ startup {
     settings.Add("onox",     true,  "Defeat Onox");
     
     settings.CurrentDefaultParent = "items";
-    settings.Add("l1Sword",        false, "Sword (L1)");
-    settings.Add("l2Sword",        false, "Sword (L2)");
-    settings.Add("l1Boomerang",    false, "Boomerang (L1)");
-    settings.Add("l2Boomerang",    false, "Boomerang (L2)");
-    settings.Add("l1Slingshot",    false, "Slingshot (L1)");
-    settings.Add("l2Slingshot",    false, "Slingshot (L2)");
-    settings.Add("l1Feather",      false, "Feather");
-    settings.Add("l2Feather",      false, "Cape");
-    settings.Add("rodOfSeasons",   false, "Rod of Seasons");
-    settings.Add("shovel",         false, "Shovel");
-    settings.Add("bracelet",       false, "Bracelet");
-    settings.Add("flute",          false, "Flute");
-    settings.Add("magnetGloves",   false, "Magnet Gloves");
-    settings.Add("seedSatchel",    false, "Seed Satchel (+ Ember Seeds)");
-    settings.Add("mysterySeeds",   false, "Mystery Seeds");
-    settings.Add("scentSeeds",     false, "Scent Seeds");
-    settings.Add("pegasusSeeds",   false, "Pegasus Seeds");
-    settings.Add("hurricaneSeeds", false, "Hurricane Seeds");
+    settings.Add("l1Sword",      false, "Wooden Sword (L1)");
+    settings.Add("l2Sword",      false, "Noble Sword (L2)");
+    settings.Add("l1Boomerang",  false, "Boomerang (L1)");
+    settings.Add("l2Boomerang",  false, "Magic Boomerang (L2)");
+    settings.Add("l1Slingshot",  false, "Slingshot (L1)");
+    settings.Add("l2Slingshot",  false, "Hyper Slingshot (L2)");
+    settings.Add("l1Feather",    false, "Roc's Feather (L1)");
+    settings.Add("l2Feather",    false, "Roc's Cape (L2)");
+    settings.Add("rod",          false, "Rod of Seasons");
+    settings.Add("shovel",       false, "Shovel");
+    settings.Add("bracelet",     false, "Power Bracelet");
+    settings.Add("flute",        false, "Flute");
+    settings.Add("magnetGloves", false, "Magnetic Gloves");
+    settings.Add("seedSatchel",  false, "Seed Satchel (+ Ember Seeds)");
+    settings.Add("mysterySeeds", false, "Mystery Seeds");
+    settings.Add("scentSeeds",   false, "Scent Seeds");
+    settings.Add("pegasusSeeds", false, "Pegasus Seeds");
+    settings.Add("galeSeeds",    false, "Gale Seeds");
     
     settings.CurrentDefaultParent = "keyItems";
     settings.Add("gnarledKey",    false, "Gnarled Key");
@@ -68,12 +68,12 @@ startup {
     settings.Add("ribbon",        false, "Ribbon");
     settings.Add("mastersPlaque", false, "Master's Plaque");
     settings.Add("flippers",      false, "Flippers");
-    settings.Add("bananas",       false, "Bananas");
+    settings.Add("bananas",       false, "Spring Bananas");
     settings.Add("bombFlower",    false, "Bomb Flower");
     settings.Add("squareJewel",   false, "Square Jewel");
     settings.Add("pyramidJewel",  false, "Pyramid Jewel");
     settings.Add("crossJewel",    false, "Cross Jewel");
-    settings.Add("circleJewel",   false, "Circle Jewel");
+    settings.Add("roundJewel",   false, "Circle Jewel");
     settings.Add("rustyBell",     false, "Rusty Bell");
     settings.Add("piratesBell",   false, "Pirate's Bell");
     settings.Add("makuSeed",      false, "Maku Seed");
@@ -131,38 +131,25 @@ startup {
         return vars.watchers[name].Current == value;
     });
 
-    vars.GetBit = (Func<byte, int, bool>)((flags, shift) => {
+    vars.GetFlag = (Func<string, int, bool>)((name, shift) => {
+        var flags = vars.watchers[name].Current;
         return ((flags >> shift) & 1) == 1;
     });
 
-    vars.Treasure = (Func<int, int, bool>)((index, bit) => {
-        var name = "treasure1";
-        if (index > 7) {
-            name = "treasure3";
-        } else if (index > 3) {
-            name = "treasure2";
+    vars.Treasure = (Func<int, bool>)((shift) => {
+        var name = "treasure0";
+        if (shift > 0x3F) {
+            name = "treasure8";
+            shift -= 0x40;
         }
 
-        var value = vars.watchers[name].Current;
-        var flags = BitConverter.GetBytes(value)[index % 4];
-        return vars.GetBit(flags, bit);
-    });
-
-    vars.Essence = (Func<int, bool>)((bit) => {
-        var flags = vars.watchers["essences"].Current;
-        return vars.GetBit(flags, bit);
-    });
-
-    vars.Season = (Func<int, bool>)((bit) => {
-        var flags = vars.watchers["seasons"].Current;
-        return vars.GetBit(flags, bit);
+        return vars.GetFlag(name, shift);
     });
 
     vars.GetWatcherList = (Func<int, MemoryWatcherList>)((wramOffset) => {
         return new MemoryWatcherList {
-            new MemoryWatcher<int>(new DeepPointer(wramOffset,   0x0692)) { Name = "treasure1" },
-            new MemoryWatcher<int>(new DeepPointer(wramOffset,   0x0696)) { Name = "treasure2" },
-            new MemoryWatcher<int>(new DeepPointer(wramOffset,   0x069A)) { Name = "treasure3" },
+            new MemoryWatcher<long>(new DeepPointer(wramOffset,  0x0692)) { Name = "treasure0" },
+            new MemoryWatcher<int>(new DeepPointer(wramOffset,   0x069A)) { Name = "treasure8" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x06AC)) { Name = "swordLevel" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x06B0)) { Name = "seasons" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x06B1)) { Name = "boomerangLevel" },
@@ -178,12 +165,11 @@ startup {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x09BA)) { Name = "d6Entrance" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0A5B)) { Name = "d7Entrance" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0A87)) { Name = "d8Entrance" },
-            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0A97)) { Name = "d9Entrance" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0A97)) { Name = "ocEntrance" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0A91)) { Name = "onoxRoom" },
-            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x11A9)) { Name = "onoxHP" },
-            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0B00)) { Name = "oam" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x11A9)) { Name = "enemy1HP" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0B00)) { Name = "oam0" },
             new MemoryWatcher<short>(new DeepPointer(wramOffset, 0x0BB3)) { Name = "fileSelectMode" },
-            // new MemoryWatcher<byte>(new DeepPointer(wramOffset, 0x1EFF)) { Name = "resetCheck" },
         };
     });
 
@@ -197,66 +183,65 @@ startup {
             { "d6Entrance", vars.Current("d6Entrance", 0x10) },
             { "d7Entrance", vars.Current("d7Entrance", 0x10) },
             { "d8Entrance", vars.Current("d8Entrance", 0x10) },
-            { "d9Entrance", vars.Current("d9Entrance", 0x10) },
-            { "onoxRoom",   vars.Current("onoxRoom", 0x10) },
+            { "ocEntrance", vars.Current("ocEntrance", 0x10) },
+            { "onoxRoom",   vars.Current("onoxRoom",   0x10) },
 
-            { "d1Essence", vars.Essence(0) },
-            { "d2Essence", vars.Essence(1) },
-            { "d3Essence", vars.Essence(2) },
-            { "d4Essence", vars.Essence(3) },
-            { "d5Essence", vars.Essence(4) },
-            { "d6Essence", vars.Essence(5) },
-            { "d7Essence", vars.Essence(6) },
-            { "d8Essence", vars.Essence(7) },
-            { "onox",      vars.Current("onoxHP", 0x01) && 
-                           vars.Current("onoxRoom", 0x10) },
+            { "d1Essence", vars.GetFlag("essences", 0) },
+            { "d2Essence", vars.GetFlag("essences", 1) },
+            { "d3Essence", vars.GetFlag("essences", 2) },
+            { "d4Essence", vars.GetFlag("essences", 3) },
+            { "d5Essence", vars.GetFlag("essences", 4) },
+            { "d6Essence", vars.GetFlag("essences", 5) },
+            { "d7Essence", vars.GetFlag("essences", 6) },
+            { "d8Essence", vars.GetFlag("essences", 7) },
 
-            { "l1Sword",        vars.Treasure(0, 5) },
-            { "rodOfSeasons",   vars.Treasure(0, 7) },
-            { "magnetGloves",   vars.Treasure(1, 0) },
-            { "flute",          vars.Treasure(1, 6) },
-            { "l1Slingshot",    vars.Treasure(2, 3) },
-            { "shovel",         vars.Treasure(2, 5) },
-            { "bracelet",       vars.Treasure(2, 6) },
-            { "l1Feather",      vars.Treasure(2, 7) },
-            { "seedSatchel",    vars.Treasure(3, 1) }, // ember seeds [4,0]
-            { "scentSeeds",     vars.Treasure(4, 1) },
-            { "pegasusSeeds",   vars.Treasure(4, 2) },
-            { "hurricaneSeeds", vars.Treasure(4, 3) },
-            { "mysterySeeds",   vars.Treasure(4, 4) },
-            { "flippers",       vars.Treasure(5, 6) },
-            { "makuSeed",       vars.Treasure(6, 6) },
-            { "gnarledKey",     vars.Treasure(8, 2) },
-            { "floodgateKey",   vars.Treasure(8, 3) },
-            { "dragonKey",      vars.Treasure(8, 4) },
-            { "starOre",        vars.Treasure(8, 5) },
-            { "ribbon",         vars.Treasure(8, 6) },
-            { "bananas",        vars.Treasure(8, 7) },
-            { "rickysGloves",   vars.Treasure(9, 0) },
-            { "bombFlower",     vars.Treasure(9, 1) },
-            { "rustyBell",      vars.Treasure(9, 2) },
-            { "circleJewel",    vars.Treasure(9, 4) },
-            { "pyramidJewel",   vars.Treasure(9, 5) },
-            { "squareJewel",    vars.Treasure(9, 6) },
-            { "crossJewel",     vars.Treasure(9, 7) },
-            { "mastersPlaque",  vars.Treasure(10, 4) },
-            { "piratesBell",    vars.Current("bellState", 0x01) },
-            { "l2Sword",        vars.Current("swordLevel", 0x02) },
-            { "l1Boomerang",    vars.Current("boomerangLevel", 0x01) }, // [0,6]
-            { "l2Boomerang",    vars.Current("boomerangLevel", 0x02) },
-            { "l2Feather",      vars.Current("featherLevel", 0x02) },
-            { "l2Slingshot",    vars.Current("slingshotLevel", 0x02) },
+            { "onox", vars.Current("onoxRoom", 0x10) && vars.Current("enemy1HP", 0x01) }, // 0x05,0x010E
+
+            { "l1Sword",       vars.Treasure(0x05) }, // t0,5
+            { "rod",           vars.Treasure(0x07) }, // t0,7
+            { "magnetGloves",  vars.Treasure(0x08) }, // t1,0
+            { "flute",         vars.Treasure(0x0E) }, // t1,6
+            { "l1Slingshot",   vars.Treasure(0x13) }, // t2,3
+            { "shovel",        vars.Treasure(0x15) }, // t2,5
+            { "bracelet",      vars.Treasure(0x16) }, // t2,6
+            { "l1Feather",     vars.Treasure(0x17) }, // t2,7
+            { "seedSatchel",   vars.Treasure(0x19) }, // t3,1; ember seeds t4,0
+            { "scentSeeds",    vars.Treasure(0x21) }, // t4,1
+            { "pegasusSeeds",  vars.Treasure(0x22) }, // t4,2
+            { "galeSeeds",     vars.Treasure(0x23) }, // t4,3
+            { "mysterySeeds",  vars.Treasure(0x24) }, // t4,4
+            { "flippers",      vars.Treasure(0x2E) }, // t5,6
+            { "makuSeed",      vars.Treasure(0x36) }, // t6,6
+            { "gnarledKey",    vars.Treasure(0x42) }, // t8,2
+            { "floodgateKey",  vars.Treasure(0x43) }, // t8,3
+            { "dragonKey",     vars.Treasure(0x44) }, // t8,4
+            { "starOre",       vars.Treasure(0x45) }, // t8,5
+            { "ribbon",        vars.Treasure(0x46) }, // t8,6
+            { "bananas",       vars.Treasure(0x47) }, // t8,7
+            { "rickysGloves",  vars.Treasure(0x48) }, // t9,0
+            { "bombFlower",    vars.Treasure(0x49) }, // t9,1; also t11,0
+            { "rustyBell",     vars.Treasure(0x4A) }, // t9,2
+            { "roundJewel",    vars.Treasure(0x4C) }, // t9,4
+            { "pyramidJewel",  vars.Treasure(0x4D) }, // t9,5
+            { "squareJewel",   vars.Treasure(0x4E) }, // t9,6
+            { "crossJewel",    vars.Treasure(0x4F) }, // t9,7
+            { "mastersPlaque", vars.Treasure(0x54) }, // t10,4
+            { "piratesBell",   vars.Current("bellState",      0x01) },
+            { "l2Sword",       vars.Current("swordLevel",     0x02) },
+            { "l1Boomerang",   vars.Current("boomerangLevel", 0x01) }, // [0,6]
+            { "l2Boomerang",   vars.Current("boomerangLevel", 0x02) },
+            { "l2Feather",     vars.Current("featherLevel",   0x02) },
+            { "l2Slingshot",   vars.Current("slingshotLevel", 0x02) },
             
-            { "winter", vars.Season(3) },
-            { "summer", vars.Season(1) },
-            { "spring", vars.Season(0) },
-            { "autumn", vars.Season(2) },
+            { "winter", vars.GetFlag("seasons", 3) },
+            { "summer", vars.GetFlag("seasons", 1) },
+            { "spring", vars.GetFlag("seasons", 0) },
+            { "autumn", vars.GetFlag("seasons", 2) },
         };
     });
 }
 
 init {
-    vars.watchers = new MemoryWatcherList();
     vars.pastSplits = new HashSet<string>();
 
     if (!vars.TryFindOffsets(game, (long)modules.First().BaseAddress)) {
@@ -267,24 +252,16 @@ init {
 }
 
 update {
-    if (timer.CurrentPhase == TimerPhase.NotRunning && vars.pastSplits.Count > 0) {
-        vars.pastSplits.Clear();
-    }
-
     vars.watchers.UpdateAll(game);
 }
 
 start {
-    return vars.watchers["oam"].Current == 0x23 && vars.watchers["fileSelectMode"].Current == 0x0301;
-}
-
-reset {
-    // return vars.watchers["resetCheck"].Current > 0;
+    return vars.watchers["oam0"].Current == 0x23 && vars.watchers["fileSelectMode"].Current == 0x0301;
 }
 
 split {
     // prevent splitting on the file select screen
-    var fs = vars.watchers["oam"].Current;
+    var fs = vars.watchers["oam0"].Current;
     if (fs == 0x17 || fs == 0x23) {
         return false;
     }
@@ -297,6 +274,10 @@ split {
             return true;
         }
     }
+}
+
+onReset {
+    vars.pastSplits.Clear();
 }
 
 exit {
