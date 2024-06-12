@@ -168,6 +168,7 @@ startup {
 
     vars.GetWatcherList = (Func<int, MemoryWatcherList>)((wramOffset) => {
         return new MemoryWatcherList {
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0580)) { Name = "unused" },
             new MemoryWatcher<short>(new DeepPointer(wramOffset, 0x0682)) { Name = "bossKeys" },
             new MemoryWatcher<long>(new DeepPointer(wramOffset,  0x069A)) { Name = "treasure0" },
             new MemoryWatcher<int>(new DeepPointer(wramOffset,   0x06A2)) { Name = "treasure8" },
@@ -308,6 +309,11 @@ start {
 }
 
 split {
+    // prevent splitting on hard reset
+    if (vars.watchers["unused"].Current != 0) {
+        return false;
+    }
+
     //prevent splitting on the file select screen
     var fs = vars.watchers["oam0"].Current;
     if (fs == 0x17 || fs == 0x23) {
