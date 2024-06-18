@@ -273,12 +273,21 @@ split {
     }
 
     var splits = vars.GetSplitList();
+    var toSplit = new List<string>();
     foreach (var split in splits) {
         if (settings[split.Key] && split.Value && !vars.pastSplits.Contains(split.Key)) {
             vars.pastSplits.Add(split.Key);
-            print("[Autosplitter] Split: " + split.Key);
-            return true;
+            toSplit.Add(split.Key);
         }
+    }
+
+    // prevent splitting on mid-progress file/state loads
+    if (toSplit.Count > 1) {
+        print("[Autosplitter] Simultaneous split events - not splitting!");
+        return false;
+    } else if (toSplit.Count == 1) {
+        print("[Autosplitter] Split: " + toSplit[0]);
+        return true;
     }
 }
 
