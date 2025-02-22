@@ -27,6 +27,8 @@ init {
         { 12836864,  0x1408D8BE8 },   // Snes9x 1.60 (x64)
         { 10399744,  0x9B74D0 },      // Snes9x 1.62.3
         { 15474688,  0x140A62390 },   // Snes9x 1.62.3 (x64)
+        { 11124736,  0xA63DF0 },      // Snes9x 1.63
+        { 16994304,  0x140BC1CA0 },   // Snes9x 1.63 (x64)
         { 16019456,  0x94D144 },      // higan v106
         { 15360000,  0x8AB144 },      // higan v106.112
         { 10096640,  0x72BECC },      // bsnes v107
@@ -56,6 +58,8 @@ init {
 
     if (memoryOffset == 0) {
         throw new Exception("Memory not yet initialized.");
+    } else {
+        print("[Autosplitter] Memory address: " + memoryOffset.ToString("X8"));
     }
 
     vars.watchers = new MemoryWatcherList {
