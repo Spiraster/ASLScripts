@@ -13,6 +13,7 @@ startup {
     settings.Add("items",     true, "Items");
     settings.Add("keyItems",  true, "Key Items");
     settings.Add("seasons",   true, "Seasons");
+    settings.Add("misc",      true, "Miscellaneous");
 
     settings.CurrentDefaultParent = "entrances";
     settings.Add("d1Entrance", true, "Gnarled Root Dungeon (D1)");
@@ -83,6 +84,9 @@ startup {
     settings.Add("summer", false, "Summer");
     settings.Add("spring", false, "Spring");
     settings.Add("autumn", false, "Autumn");
+
+    settings.CurrentDefaultParent = "misc";
+    settings.Add("mtcucco", false, "Hide & Seek Portal (Mt. Cucco)");
 
     refreshRate = 0.5;
 
@@ -158,6 +162,7 @@ startup {
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x06B4)) { Name = "featherLevel" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x06BB)) { Name = "essences" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x06BD)) { Name = "bellState" },
+            new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x071E)) { Name = "mtcucco" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x091C)) { Name = "d1Entrance" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x0939)) { Name = "d2Entrance" },
             new MemoryWatcher<byte>(new DeepPointer(wramOffset,  0x094B)) { Name = "d3Entrance" },
@@ -238,6 +243,8 @@ startup {
             { "summer", vars.GetFlag("seasons", 1) },
             { "spring", vars.GetFlag("seasons", 0) },
             { "autumn", vars.GetFlag("seasons", 2) },
+
+            { "mtcucco", vars.Current("mtcucco", 0x08) },
         };
     });
 }
